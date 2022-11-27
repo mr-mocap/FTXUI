@@ -64,6 +64,11 @@ namespace {
 
 ScreenInteractive* g_active_screen = nullptr;  // NOLINT
 
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+std::mutex         g_resize_signal_mutex;
+std::atomic<bool>  g_resize_signal_occurred = false;
+#endif
+
 void Flush() {
   // Emscripten doesn't implement flush. We interpret zero as flush.
   std::cout << '\0' << std::flush;
@@ -160,11 +165,28 @@ int CheckStdinReady(int usec_timeout) {
   return FD_ISSET(STDIN_FILENO, &fds);                    // NOLINT
 }
 
+bool CheckIfResizeSignalOccurred()
+{
+  std::unique_lock<std::mutex> lock(g_resize_signal_mutex);
+
+  return g_resize_signal_occurred;
+}
+
 // Read char from the terminal.
 void EventListener(std::atomic<bool>* quit, Sender<Task> out) {
   auto parser = TerminalInputParser(std::move(out));
 
   while (!*quit) {
+    if (CheckIfResizeSignalOccurred())
+    {
+        {
+            std::unique_lock<std::mutex> lock(g_resize_signal_mutex);
+
+	    g_resize_signal_occurred = false;
+        }
+	parser.Add(0); // Should be translated ultimately into out->Send(Event::Special([0}))
+	continue;
+    }
     if (!CheckStdinReady(timeout_microseconds)) {
       parser.Timeout(timeout_milliseconds);
       continue;
@@ -489,7 +511,9 @@ void ScreenInteractive::Install() {
   tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
 
   // Handle resize.
-  g_on_resize = [&] { task_sender_->Send(Event::Special({0})); };
+  g_on_resize = [&] { std::unique_lock<std::mutex> lock(g_resize_signal_mutex);
+	              g_resize_signal_occurred = true;
+                    };
   install_signal_handler(SIGWINCH, OnResize);
 
   // Handle SIGTSTP/SIGCONT.
@@ -559,7 +583,6 @@ void ScreenInteractive::RunOnceBlocking(Component component) {
   RunOnce(component);
 }
 
-// NOLINTNEXTLINE
 void ScreenInteractive::RunOnce(Component component) {
   Task task;
   while (task_receiver_->ReceiveNonBlocking(&task)) {
