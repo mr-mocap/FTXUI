@@ -65,6 +65,13 @@ namespace {
 ScreenInteractive* g_active_screen = nullptr;  // NOLINT
 
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+// This is for handling the OnResize() that is generated via a signal.
+// We need the signal handler to do as little as possible and defer action
+// to the main, non-signal-handling code.
+//
+// We will accomplish this by using a boolean.
+//
+// NOTE: This really only comes into play on non-Windows systems.
 std::mutex         g_resize_signal_mutex;
 std::atomic<bool>  g_resize_signal_occurred = false;
 #endif
@@ -511,6 +518,9 @@ void ScreenInteractive::Install() {
   tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
 
   // Handle resize.
+  //
+  // Since this will be executed in a signal handler, we need to do the
+  // absolute barest minimum necessary and push handling off to non signal-handling code.
   g_on_resize = [&] { std::unique_lock<std::mutex> lock(g_resize_signal_mutex);
 	              g_resize_signal_occurred = true;
                     };
