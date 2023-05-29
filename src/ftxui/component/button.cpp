@@ -74,13 +74,13 @@ Component Button(ConstStringRef label,
       const bool focused = Focused();
       const bool focused_or_hover = focused || mouse_hover_;
 
-      float target = focused_or_hover ? 1.F : 0.F;  // NOLINT
+      float target = focused_or_hover ? 1.f : 0.f;  // NOLINT
       if (target != animator_background_.to()) {
         SetAnimationTarget(target);
       }
 
       auto focus_management = focused ? focus : active ? select : nothing;
-      EntryState state = {
+      const EntryState state = {
           *label_,
           false,
           active,

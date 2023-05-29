@@ -1,11 +1,12 @@
-#include <gtest/gtest.h>
+#include <gtest/gtest.h>  // for Test, EXPECT_EQ, Message, TestPartResult, TestInfo (ptr only), TEST
 #include <string>  // for allocator
 
 #include "ftxui/dom/elements.hpp"  // for operator|, text, bgcolor, color, Element
 #include "ftxui/dom/node.hpp"      // for Render
-#include "ftxui/screen/color.hpp"   // for Color, Color::Red
+#include "ftxui/screen/color.hpp"   // for Color, Color::Red, Color::RedLight
 #include "ftxui/screen/screen.hpp"  // for Screen, Pixel
 
+// NOLINTBEGIN
 namespace ftxui {
 
 TEST(ColorTest, Foreground) {
@@ -25,6 +26,7 @@ TEST(ColorTest, Background) {
 }
 
 }  // namespace ftxui
+// NOLINTEND
 
 // Copyright 2022 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in

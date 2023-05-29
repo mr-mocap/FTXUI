@@ -1,14 +1,19 @@
-#include <gtest/gtest.h>  // for AssertionResult, Message, TestPartResult, Test, EXPECT_TRUE, EXPECT_EQ, SuiteApiResolver, TestInfo (ptr only), EXPECT_FALSE, TEST, TestFactoryImpl
+#include <array>                      // for array
+#include <cstddef>                    // for size_t
 #include <ftxui/component/mouse.hpp>  // for Mouse, Mouse::Left, Mouse::Pressed, Mouse::Released
-#include <ftxui/dom/elements.hpp>  // for GaugeDirection, GaugeDirection::Down, GaugeDirection::Left, GaugeDirection::Right, GaugeDirection::Up
-#include <memory>  // for __shared_ptr_access, shared_ptr, allocator
+#include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
+#include <ftxui/dom/elements.hpp>   // for frame
+#include <memory>  // for shared_ptr, __shared_ptr_access, allocator
+#include <string>  // for string, to_string
 
-#include "ftxui/component/component.hpp"       // for Slider
+#include "ftxui/component/component.hpp"  // for Slider, Vertical, operator|=
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
-#include "ftxui/component/event.hpp"           // for Event
+#include "ftxui/component/event.hpp"           // for Event, Event::ArrowDown
 #include "ftxui/dom/node.hpp"                  // for Render
 #include "ftxui/screen/screen.hpp"             // for Screen
+#include "gtest/gtest.h"  // for AssertionResult, Message, TestPartResult, Test, EXPECT_EQ, EXPECT_TRUE, EXPECT_FALSE, TEST
 
+// NOLINTBEGIN
 namespace ftxui {
 
 namespace {
@@ -44,7 +49,7 @@ TEST(SliderTest, Right) {
       .min = 0,
       .max = 100,
       .increment = 10,
-      .direction = GaugeDirection::Right,
+      .direction = Direction::Right,
   });
   Screen screen(11, 1);
   Render(screen, slider->Render());
@@ -67,7 +72,7 @@ TEST(SliderTest, Left) {
       .min = 0,
       .max = 100,
       .increment = 10,
-      .direction = GaugeDirection::Left,
+      .direction = Direction::Left,
   });
   Screen screen(11, 1);
   Render(screen, slider->Render());
@@ -90,7 +95,7 @@ TEST(SliderTest, Down) {
       .min = 0,
       .max = 100,
       .increment = 10,
-      .direction = GaugeDirection::Down,
+      .direction = Direction::Down,
   });
   Screen screen(1, 11);
   Render(screen, slider->Render());
@@ -113,7 +118,7 @@ TEST(SliderTest, Up) {
       .min = 0,
       .max = 100,
       .increment = 10,
-      .direction = GaugeDirection::Up,
+      .direction = Direction::Up,
   });
   Screen screen(1, 11);
   Render(screen, slider->Render());
@@ -129,7 +134,61 @@ TEST(SliderTest, Up) {
   EXPECT_FALSE(slider->OnEvent(MousePressed(2, 5)));
 }
 
+TEST(SliderTest, Focus) {
+  static std::array<int, 10> values;
+  auto container = Container::Vertical({});
+  for (size_t i = 0; i < values.size(); ++i) {
+    container->Add(Slider(std::to_string(i), &values[i]));
+  }
+  container |= frame;
+
+  Screen screen(10, 3);
+
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "0");  // Select 0
+  EXPECT_EQ(screen.at(0, 1), "1");
+  EXPECT_EQ(screen.at(0, 2), "2");
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "0");
+  EXPECT_EQ(screen.at(0, 1), "1");  // Select 1
+  EXPECT_EQ(screen.at(0, 2), "2");
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "1");
+  EXPECT_EQ(screen.at(0, 1), "2");  // Select 2
+  EXPECT_EQ(screen.at(0, 2), "3");
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));  // Select 3
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));  // Select 4
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));  // Select 5
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));  // Select 6
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "6");
+  EXPECT_EQ(screen.at(0, 1), "7");  // Select 7
+  EXPECT_EQ(screen.at(0, 2), "8");
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "7");
+  EXPECT_EQ(screen.at(0, 1), "8");  // Select 8
+  EXPECT_EQ(screen.at(0, 2), "9");
+
+  EXPECT_TRUE(container->OnEvent(Event::ArrowDown));
+  Render(screen, container->Render());
+  EXPECT_EQ(screen.at(0, 0), "7");
+  EXPECT_EQ(screen.at(0, 1), "8");
+  EXPECT_EQ(screen.at(0, 2), "9");  // Select 9
+
+  EXPECT_FALSE(container->OnEvent(Event::ArrowDown));
+}
+
 }  // namespace ftxui
+// NOLINTEND
 
 // Copyright 2022 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in

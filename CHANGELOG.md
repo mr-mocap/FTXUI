@@ -4,7 +4,50 @@ Changelog
 current (development) 
 ---------------------
 
+### Component
+- Breaking: MenuDirection enum is renamed Direction
+- Breaking: GaugeDirection enum is renamed Direction
+- Breaking: Direction enum is renamed WidthOrHeight
+- Breaking: Remove `ComponentBase` copy constructor/assignment.
+- Feature: `ResizeableSplit` now support arbitrary element as a separator.
+- Feature: `input` is now supporting multiple lines.
+- Feature: `input` style is now customizeable.
+
+### Build
+- Check version compatibility when using cmake find_package()
+
+4.1.1
+-----
+
+### Component
+- Fix: Support arrow keys in application mode
+- Fix: Remove useless new line when using an alternative screen.
+
+### Dom
+- Feature: Add the dashed style for border and separator:
+  - See `DASHED` enum, and  `separatorDashed()`, `borderDashed()` functions.
+- Feature: Add colored borders.
+  - See functions: `borderStyled(BorderStyle, Color)` and `borderStyled(Color)`.
+- Feature: Add `LinearGradient`. It can be used in `color` and `bgColor`.
+- Improvement: Color::Interpolate() uses gamma correction.
+- Fix: Check the `graph` area is positive.
+
+### Build/Install
+- Use globally set CMAKE_CXX_STANDARD if it is set.
+- Expose the pkg-config file
+- Check version compatibility when using cmake find_package()
+
+4.1.0  (Abandonned)
+-----
+This version is abandonned and must not be used. It introduced a breaking change in the API.
+
+4.0.0
+-----
+
 ### DOM
+- Feature: more styles:
+  - `strikethrough`
+  - `underlinedDouble`
 - Feature: Customize the cursor. Add the following decorators:
   - `focusCursorBlock`
   - `focusCursorBlockBlinking`
@@ -19,6 +62,7 @@ current (development)
 - Bugfix: Forward the selected/focused area from the child in gridbox.
 - Bugfix: Fix incorrect Canvas computed dimensions.
 - Bugfix: Support `vscroll_indicator` with a zero inner size.
+- Bugfix: Fix `vscroll_indicator` hidding the last column.
 
 ### Component:
 - Feature: Add the `Modal` component.
@@ -37,6 +81,7 @@ current (development)
   mouse.
 - Bugfix: Add implementation of `ButtonOption::Border()`. It was missing.
 - Bugfix: Provide the correct key for F1-F4 and F11.
+- Feature: Add the `Hoverable` component decorators.
 
 ### Screen
 - Feature: add `Box::Union(a,b) -> Box`
@@ -44,6 +89,9 @@ current (development)
 - Feature: Add emscripten screen resize support.
 - Bugfix: Add unicode 13 support for full width characters.
 - Bugfix: Fix MSVC treating codecvt C++17 deprecated function as an error.
+
+### Build
+- Support using the google test version provided by the package manager.
 
 3.0.0
 -----

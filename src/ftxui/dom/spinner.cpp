@@ -186,67 +186,88 @@ const std::vector<std::vector<std::vector<std::string>>> elements = {
         {"[  ==  ]"},
         {"[ ==   ]"},
     },
-    {{
-         " ─╮",
-         "  │",
-         "   ",
-     },
-     {
-         "  ╮",
-         "  │",
-         "  ╯",
-     },
-     {
-         "   ",
-         "  │",
-         " ─╯",
-     },
-     {
-         "   ",
-         "   ",
-         "╰─╯",
-     },
-     {
-         "   ",
-         "│  ",
-         "╰─ ",
-     },
-     {
-         "╭  ",
-         "│  ",
-         "╰  ",
-     },
-     {
-         "╭─ ",
-         "│  ",
-         "   ",
-     },
-     {
-         "╭─╮",
-         "   ",
-         "   ",
-     }},
-    {{
-         "   /\\O ",
-         "    /\\/",
-         "   /\\  ",
-         "  /  \\ ",
-         "LOL  LOL",
-     },
-     {
-         "    _O  ",
-         "   //|_ ",
-         "    |   ",
-         "   /|   ",
-         "   LLOL ",
-     },
-     {
-         "     O  ",
-         "    /_  ",
-         "    |\\  ",
-         "   / |  ",
-         " LOLLOL ",
-     }}};
+    {
+        {
+            " ─╮",
+            "  │",
+            "   ",
+        },
+        {
+            "  ╮",
+            "  │",
+            "  ╯",
+        },
+        {
+            "   ",
+            "  │",
+            " ─╯",
+        },
+        {
+            "   ",
+            "   ",
+            "╰─╯",
+        },
+        {
+            "   ",
+            "│  ",
+            "╰─ ",
+        },
+        {
+            "╭  ",
+            "│  ",
+            "╰  ",
+        },
+        {
+            "╭─ ",
+            "│  ",
+            "   ",
+        },
+        {
+            "╭─╮",
+            "   ",
+            "   ",
+        },
+    },
+    {
+        {
+            "   /\\O ",
+            "    /\\/",
+            "   /\\  ",
+            "  /  \\ ",
+            "LOL  LOL",
+        },
+        {
+            "    _O  ",
+            "   //|_ ",
+            "    |   ",
+            "   /|   ",
+            "   LLOL ",
+        },
+        {
+            "     O  ",
+            "    /_  ",
+            "    |\\  ",
+            "   / |  ",
+            " LOLLOL ",
+        },
+    },
+    {
+        {"       ", "_______", "       "},
+        {"       ", "______/", "       "},
+        {"      _", "_____/ ", "       "},
+        {"     _ ", "____/ \\", "       "},
+        {"    _  ", "___/ \\ ", "      \\"},
+        {"   _   ", "__/ \\  ", "     \\_"},
+        {"  _    ", "_/ \\   ", "    \\_/"},
+        {" _     ", "/ \\   _", "   \\_/ "},
+        {"_      ", " \\   __", "  \\_/  "},
+        {"       ", "\\   ___", " \\_/   "},
+        {"       ", "    ___", "\\_/    "},
+        {"       ", "  _____", "_/     "},
+        {"       ", " ______", "/      "},
+        {"       ", "_______", "       "},
+    },
+};
 
 }  // namespace
 
@@ -257,7 +278,7 @@ const std::vector<std::vector<std::vector<std::string>>> elements = {
 /// every "step".
 /// @ingroup dom
 Element spinner(int charset_index, size_t image_index) {
-  if (charset_index == 0) {
+  if (charset_index <= 0) {
     const int progress_size = 40;
     image_index %= progress_size;
     if (image_index > progress_size / 2) {
@@ -265,8 +286,8 @@ Element spinner(int charset_index, size_t image_index) {
     }
     return gauge(float(image_index) * 0.05F);  // NOLINT
   }
-  charset_index %= (int)elements.size();
-  image_index %= (int)elements[charset_index].size();
+  charset_index %= int(elements.size());
+  image_index %= int(elements[charset_index].size());
   std::vector<Element> lines;
   for (const auto& it : elements[charset_index][image_index]) {
     lines.push_back(text(it));

@@ -1,23 +1,26 @@
 ---
 Checks: "*,
+        -*-narrowing-conversions
+        -*-uppercase-literal-suffix,
         -abseil-*,
         -altera-*,
         -android-*,
+        -bugprone-easily-swappable-parameters,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
         -fuchsia-*,
         -google-*,
         -llvm*,
-        -modernize-use-trailing-return-type,
-        -zircon-*,
-        -bugprone-easily-swappable-parameters,
-        -cppcoreguidelines-non-private-member-variables-in-classes,
         -misc-no-recursion,
         -misc-non-private-member-variables-in-classes,
         -modernize-use-nodiscard,
+        -modernize-use-trailing-return-type,
         -readability-avoid-const-params-in-decls,
         -readability-else-after-return,
         -readability-identifier-length,
         -readability-implicit-bool-conversion,
+        -readability-non-const-parameter,
         -readability-static-accessed-through-instance,
+        -zircon-*,
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

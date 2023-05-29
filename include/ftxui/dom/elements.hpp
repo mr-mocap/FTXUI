@@ -5,7 +5,9 @@
 #include <memory>
 
 #include "ftxui/dom/canvas.hpp"
+#include "ftxui/dom/direction.hpp"
 #include "ftxui/dom/flexbox_config.hpp"
+#include "ftxui/dom/linear_gradient.hpp"
 #include "ftxui/dom/node.hpp"
 #include "ftxui/screen/box.hpp"
 #include "ftxui/screen/color.hpp"
@@ -20,8 +22,14 @@ using Elements = std::vector<Element>;
 using Decorator = std::function<Element(Element)>;
 using GraphFunction = std::function<std::vector<int>(int, int)>;
 
-enum BorderStyle { LIGHT, HEAVY, DOUBLE, ROUNDED, EMPTY };
-enum class GaugeDirection { Left, Up, Right, Down };
+enum BorderStyle {
+  LIGHT,
+  DASHED,
+  HEAVY,
+  DOUBLE,
+  ROUNDED,
+  EMPTY,
+};
 
 // Pipe elements into decorator togethers.
 // For instance the next lines are equivalents:
@@ -37,6 +45,7 @@ Element text(std::string text);
 Element vtext(std::string text);
 Element separator();
 Element separatorLight();
+Element separatorDashed();
 Element separatorHeavy();
 Element separatorDouble();
 Element separatorEmpty();
@@ -56,14 +65,17 @@ Element gaugeLeft(float progress);
 Element gaugeRight(float progress);
 Element gaugeUp(float progress);
 Element gaugeDown(float progress);
-Element gaugeDirection(float progress, GaugeDirection);
+Element gaugeDirection(float progress, Direction direction);
 Element border(Element);
 Element borderLight(Element);
+Element borderDashed(Element);
 Element borderHeavy(Element);
 Element borderDouble(Element);
 Element borderRounded(Element);
 Element borderEmpty(Element);
 Decorator borderStyled(BorderStyle);
+Decorator borderStyled(BorderStyle, Color);
+Decorator borderStyled(Color);
 Decorator borderWith(const Pixel&);
 Element window(Element title, Element content);
 Element spinner(int charset_index, size_t image_index);
@@ -83,11 +95,17 @@ Element bold(Element);
 Element dim(Element);
 Element inverted(Element);
 Element underlined(Element);
+Element underlinedDouble(Element);
 Element blink(Element);
+Element strikethrough(Element);
 Decorator color(Color);
 Decorator bgcolor(Color);
+Decorator color(const LinearGradient&);
+Decorator bgcolor(const LinearGradient&);
 Element color(Color, Element);
 Element bgcolor(Color, Element);
+Element color(const LinearGradient&, Element);
+Element bgcolor(const LinearGradient&, Element);
 Decorator focusPosition(int x, int y);
 Decorator focusPositionRelative(float x, float y);
 Element automerge(Element child);
@@ -122,9 +140,9 @@ Element notflex(Element);  // Reset the flex attribute.
 Element filler();          // A blank expandable element.
 
 // -- Size override;
-enum Direction { WIDTH, HEIGHT };
+enum WidthOrHeight { WIDTH, HEIGHT };
 enum Constraint { LESS_THAN, EQUAL, GREATER_THAN };
-Decorator size(Direction, Constraint, int value);
+Decorator size(WidthOrHeight, Constraint, int value);
 
 // --- Frame ---
 // A frame is a scrollable area. The internal area is potentially larger than

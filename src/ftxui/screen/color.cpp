@@ -1,6 +1,7 @@
 #include "ftxui/screen/color.hpp"
 
-#include <array>        // for array
+#include <array>  // for array
+#include <cmath>
 #include <string_view>  // for literals
 
 #include "ftxui/screen/color_info.hpp"  // for GetColorInfo, ColorInfo
@@ -103,11 +104,11 @@ Color::Color(uint8_t red, uint8_t green, uint8_t blue)
   const int database_begin = 16;
   const int database_end = 256;
   for (int i = database_begin; i < database_end; ++i) {
-    ColorInfo color_info = GetColorInfo(Color::Palette256(i));
-    int dr = color_info.red - red;
-    int dg = color_info.green - green;
-    int db = color_info.blue - blue;
-    int dist = dr * dr + dg * dg + db * db;
+    const ColorInfo color_info = GetColorInfo(Color::Palette256(i));
+    const int dr = color_info.red - red;
+    const int dg = color_info.green - green;
+    const int db = color_info.blue - blue;
+    const int dist = dr * dr + dg * dg + db * db;
     if (closest > dist) {
       closest = dist;
       best = i;
@@ -186,7 +187,7 @@ Color Color::Interpolate(float t, const Color& a, const Color& b) {
       }
 
       case ColorType::Palette16: {
-        ColorInfo info = GetColorInfo(Color::Palette16(color.red_));
+        const ColorInfo info = GetColorInfo(Color::Palette16(color.red_));
         *red = info.red;
         *green = info.green;
         *blue = info.blue;
@@ -194,7 +195,7 @@ Color Color::Interpolate(float t, const Color& a, const Color& b) {
       }
 
       case ColorType::Palette256: {
-        ColorInfo info = GetColorInfo(Color::Palette256(color.red_));
+        const ColorInfo info = GetColorInfo(Color::Palette256(color.red_));
         *red = info.red;
         *green = info.green;
         *blue = info.blue;
@@ -211,21 +212,22 @@ Color Color::Interpolate(float t, const Color& a, const Color& b) {
     }
   };
 
-  uint8_t red_a = 0;
-  uint8_t green_a = 0;
-  uint8_t blue_a = 0;
-  uint8_t red_b = 0;
-  uint8_t green_b = 0;
-  uint8_t blue_b = 0;
-  get_color(a, &red_a, &green_a, &blue_a);
-  get_color(b, &red_b, &green_b, &blue_b);
+  uint8_t a_r = 0;
+  uint8_t a_g = 0;
+  uint8_t a_b = 0;
+  uint8_t b_r = 0;
+  uint8_t b_g = 0;
+  uint8_t b_b = 0;
+  get_color(a, &a_r, &a_g, &a_b);
+  get_color(b, &b_r, &b_g, &b_b);
 
-  return Color::RGB(static_cast<uint8_t>(static_cast<float>(red_a) * (1 - t) +
-                                         static_cast<float>(red_b) * t),
-                    static_cast<uint8_t>(static_cast<float>(green_a) * (1 - t) +
-                                         static_cast<float>(green_b) * t),
-                    static_cast<uint8_t>(static_cast<float>(blue_a) * (1 - t) +
-                                         static_cast<float>(blue_b) * t));
+  // Gamma correction:
+  // https://en.wikipedia.org/wiki/Gamma_correction
+  constexpr float gamma = 2.2f;
+  return Color::RGB(
+      uint8_t(pow(pow(a_r, gamma) * (1 - t) + pow(b_r, gamma) * t, 1 / gamma)),
+      uint8_t(pow(pow(a_g, gamma) * (1 - t) + pow(b_g, gamma) * t, 1 / gamma)),
+      uint8_t(pow(pow(a_b, gamma) * (1 - t) + pow(b_b, gamma) * t, 1 / gamma)));
 }
 
 inline namespace literals {

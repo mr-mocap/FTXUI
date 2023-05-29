@@ -27,13 +27,16 @@ class Text : public Node {
 
   void Render(Screen& screen) override {
     int x = box_.x_min;
-    int y = box_.y_min;
+    const int y = box_.y_min;
     if (y > box_.y_max) {
       return;
     }
     for (const auto& cell : Utf8ToGlyphs(text_)) {
       if (x > box_.x_max) {
         return;
+      }
+      if (cell == "\n") {
+        continue;
       }
       screen.PixelAt(x, y).character = cell;
       ++x;
@@ -55,7 +58,7 @@ class VText : public Node {
   }
 
   void Render(Screen& screen) override {
-    int x = box_.x_min;
+    const int x = box_.x_min;
     int y = box_.y_min;
     if (x + width_ - 1 > box_.x_max) {
       return;

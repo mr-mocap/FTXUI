@@ -1,9 +1,11 @@
-#include <gtest/gtest.h>
+#include <string>   // for string
 #include <thread>   // for thread
 #include <utility>  // for move
 
 #include "ftxui/component/receiver.hpp"
+#include "gtest/gtest.h"  // for AssertionResult, Message, Test, TestPartResult, EXPECT_EQ, EXPECT_TRUE, EXPECT_FALSE, TEST
 
+// NOLINTBEGIN
 namespace ftxui {
 
 TEST(Receiver, Basic) {
@@ -74,6 +76,7 @@ TEST(Receiver, BasicWithThread) {
 }
 
 }  // namespace ftxui
+// NOLINTEND
 
 // Copyright 2020 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in

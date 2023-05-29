@@ -1,14 +1,15 @@
-#include <gtest/gtest.h>  // for AssertionResult, Test, Message, TestPartResult, SuiteApiResolver, TestInfo (ptr only), EXPECT_EQ, EXPECT_TRUE, TEST, TestFactoryImpl, EXPECT_FALSE
 #include <ftxui/component/mouse.hpp>  // for Mouse, Mouse::Left, Mouse::Middle, Mouse::Pressed, Mouse::Released, Mouse::Right
 #include <ftxui/component/task.hpp>   // for Task
 #include <initializer_list>           // for initializer_list
 #include <memory>                     // for allocator, unique_ptr
 #include <variant>                    // for get
 
-#include "ftxui/component/event.hpp"  // for Event, Event::Return, Event::ArrowDown, Event::ArrowLeft, Event::ArrowRight, Event::ArrowUp, Event::Backspace, Event::Custom, Event::Delete, Event::End, Event::F10, Event::F11, Event::F12, Event::F5, Event::F6, Event::F7, Event::F8, Event::F9, Event::Home, Event::PageDown, Event::PageUp, Event::Tab, Event::TabReverse, Event::Escape
+#include "ftxui/component/event.hpp"  // for Event, Event::Return, Event::ArrowDown, Event::ArrowLeft, Event::ArrowRight, Event::ArrowUp, Event::Backspace, Event::End, Event::Home, Event::Custom, Event::Delete, Event::F1, Event::F10, Event::F11, Event::F12, Event::F2, Event::F3, Event::F4, Event::F5, Event::F6, Event::F7, Event::F8, Event::F9, Event::PageDown, Event::PageUp, Event::Tab, Event::TabReverse, Event::Escape
 #include "ftxui/component/receiver.hpp"  // for MakeReceiver, ReceiverImpl
 #include "ftxui/component/terminal_input_parser.hpp"
+#include "gtest/gtest.h"  // for AssertionResult, Test, Message, TestPartResult, EXPECT_EQ, EXPECT_TRUE, TEST, EXPECT_FALSE
 
+// NOLINTBEGIN
 namespace ftxui {
 
 // Test char |c| to are trivially converted into |Event::Character(c)|.
@@ -333,22 +334,44 @@ TEST(Event, Special) {
       output.push_back(it);
     return output;
   };
+
   struct {
     std::vector<unsigned char> input;
     Event expected;
   } kTestCase[] = {
-      {str("\x1B[D"), Event::ArrowLeft},
-      {str("\x1B[C"), Event::ArrowRight},
+      // Arrow (defaut cursor mode)
       {str("\x1B[A"), Event::ArrowUp},
       {str("\x1B[B"), Event::ArrowDown},
+      {str("\x1B[C"), Event::ArrowRight},
+      {str("\x1B[D"), Event::ArrowLeft},
+      {str("\x1B[H"), Event::Home},
+      {str("\x1B[F"), Event::End},
+
+      // Arrow (application cursor mode)
+      {str("\x1BOA"), Event::ArrowUp},
+      {str("\x1BOB"), Event::ArrowDown},
+      {str("\x1BOC"), Event::ArrowRight},
+      {str("\x1BOD"), Event::ArrowLeft},
+      {str("\x1BOH"), Event::Home},
+      {str("\x1BOF"), Event::End},
+
+      // Backspace & Quirk for:
+      // https://github.com/ArthurSonzogni/FTXUI/issues/508
       {{127}, Event::Backspace},
-      // Quirk for: https://github.com/ArthurSonzogni/FTXUI/issues/508
       {{8}, Event::Backspace},
+
+      // Delete
       {str("\x1B[3~"), Event::Delete},
-      //{str("\x1B"), Event::Escape},
+
+      // Return
+      {{13}, Event::Return},
       {{10}, Event::Return},
+
+      // Tabs:
       {{9}, Event::Tab},
       {{27, 91, 90}, Event::TabReverse},
+
+      // Function keys
       {str("\x1BOP"), Event::F1},
       {str("\x1BOQ"), Event::F2},
       {str("\x1BOR"), Event::F3},
@@ -361,10 +384,12 @@ TEST(Event, Special) {
       {str("\x1B[21~"), Event::F10},
       {str("\x1B[23~"), Event::F11},
       {str("\x1B[24~"), Event::F12},
-      {{27, 91, 72}, Event::Home},
-      {{27, 91, 70}, Event::End},
-      {{27, 91, 53, 126}, Event::PageUp},
-      {{27, 91, 54, 126}, Event::PageDown},
+
+      // Page up and down:
+      {str("\x1B[5~"), Event::PageUp},
+      {str("\x1B[6~"), Event::PageDown},
+
+      // Custom:
       {{0}, Event::Custom},
   };
 
@@ -384,6 +409,7 @@ TEST(Event, Special) {
 }
 
 }  // namespace ftxui
+// NOLINTEND
 
 // Copyright 2020 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in

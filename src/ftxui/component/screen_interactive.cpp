@@ -1,19 +1,19 @@
 #include <algorithm>  // for copy, max, min
 #include <array>      // for array
-#include <chrono>  // for operator-, milliseconds, duration, operator>=, time_point, common_type<>::type
-#include <csignal>  // for signal, raise, SIGTSTP, SIGABRT, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM, SIGWINCH
-#include <cstdio>   // for fileno, size_t, stdin
+#include <chrono>  // for operator-, milliseconds, operator>=, duration, common_type<>::type, time_point
+#include <csignal>  // for signal, SIGTSTP, SIGABRT, SIGWINCH, raise, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM, __sighandler_t, size_t
+#include <cstdio>   // for fileno, stdin
 #include <ftxui/component/task.hpp>  // for Task, Closure, AnimationTask
-#include <ftxui/screen/screen.hpp>   // for Pixel, Screen::Cursor, Screen
-#include <functional>                // for function
-#include <initializer_list>          // for initializer_list
-#include <iostream>  // for cout, ostream, basic_ostream, operator<<, endl, flush
+#include <ftxui/screen/screen.hpp>  // for Pixel, Screen::Cursor, Screen, Screen::Cursor::Hidden
+#include <functional>        // for function
+#include <initializer_list>  // for initializer_list
+#include <iostream>  // for cout, ostream, operator<<, basic_ostream, endl, flush
 #include <stack>     // for stack
 #include <thread>    // for thread, sleep_for
-#include <tuple>
+#include <tuple>     // for _Swallow_assign, ignore
 #include <type_traits>  // for decay_t
 #include <utility>      // for move, swap
-#include <variant>      // for visit
+#include <variant>      // for visit, variant
 #include <vector>       // for vector
 
 #include "ftxui/component/animation.hpp"  // for TimePoint, Clock, Duration, Params, RequestAnimationFrame
@@ -21,12 +21,12 @@
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
 #include "ftxui/component/event.hpp"           // for Event
 #include "ftxui/component/loop.hpp"            // for Loop
-#include "ftxui/component/receiver.hpp"  // for Sender, ReceiverImpl, MakeReceiver, SenderImpl, Receiver
+#include "ftxui/component/receiver.hpp"  // for ReceiverImpl, Sender, MakeReceiver, SenderImpl, Receiver
 #include "ftxui/component/screen_interactive.hpp"
 #include "ftxui/component/terminal_input_parser.hpp"  // for TerminalInputParser
 #include "ftxui/dom/node.hpp"                         // for Node, Render
 #include "ftxui/dom/requirement.hpp"                  // for Requirement
-#include "ftxui/screen/terminal.hpp"                  // for Size, Dimensions
+#include "ftxui/screen/terminal.hpp"                  // for Dimensions, Size
 
 #if defined(_WIN32)
 #define DEFINE_CONSOLEV2_PROPERTIES
@@ -39,7 +39,7 @@
 #error Must be compiled in UNICODE mode
 #endif
 #else
-#include <sys/select.h>  // for select, FD_ISSET, FD_SET, FD_ZERO, fd_set
+#include <sys/select.h>  // for select, FD_ISSET, FD_SET, FD_ZERO, fd_set, timeval
 #include <termios.h>  // for tcsetattr, termios, tcgetattr, TCSANOW, cc_t, ECHO, ICANON, VMIN, VTIME
 #include <unistd.h>  // for STDIN_FILENO, read
 #endif
@@ -116,7 +116,11 @@ void EventListener(std::atomic<bool>* quit, Sender<Task> out) {
           // ignore UP key events
           if (key_event.bKeyDown == FALSE)
             continue;
-          parser.Add((char)key_event.uChar.UnicodeChar);
+          std::wstring wstring;
+          wstring += key_event.uChar.UnicodeChar;
+          for (auto it : to_string(wstring)) {
+            parser.Add(it);
+          }
         } break;
         case WINDOW_BUFFER_SIZE_EVENT:
           out->Send(Event::Special({0}));
@@ -160,8 +164,7 @@ void ftxui_on_resize(int columns, int rows) {
 }
 }
 
-#else
-#include <sys/time.h>  // for timeval
+#else  // POSIX (Linux & Mac)
 
 int CheckStdinReady(int usec_timeout) {
   timeval tv = {0, usec_timeout};
@@ -200,25 +203,95 @@ void EventListener(std::atomic<bool>* quit, Sender<Task> out) {
     }
 
     const size_t buffer_size = 100;
-    std::array<char, buffer_size> buffer;                     // NOLINT;
-    int l = read(fileno(stdin), buffer.data(), buffer_size);  // NOLINT
-    for (int i = 0; i < l; ++i) {
+    std::array<char, buffer_size> buffer;                        // NOLINT;
+    size_t l = read(fileno(stdin), buffer.data(), buffer_size);  // NOLINT
+    for (size_t i = 0; i < l; ++i) {
       parser.Add(buffer[i]);  // NOLINT
     }
   }
 }
-
 #endif
+
+std::stack<Closure> on_exit_functions;  // NOLINT
+void OnExit() {
+  while (!on_exit_functions.empty()) {
+    on_exit_functions.top()();
+    on_exit_functions.pop();
+  }
+}
+
+std::atomic<int> g_signal_exit_count = 0;  // NOLINT
+#if !defined(_WIN32)
+std::atomic<int> g_signal_stop_count = 0;    // NOLINT
+std::atomic<int> g_signal_resize_count = 0;  // NOLINT
+#endif
+
+// Async signal safe function
+void RecordSignal(int signal) {
+  switch (signal) {
+    case SIGABRT:
+    case SIGFPE:
+    case SIGILL:
+    case SIGINT:
+    case SIGSEGV:
+    case SIGTERM:
+      g_signal_exit_count++;
+      break;
+
+#if !defined(_WIN32)
+    case SIGTSTP:
+      g_signal_stop_count++;
+      break;
+
+    case SIGWINCH:
+      g_signal_resize_count++;
+      break;
+#endif
+
+    default:
+      break;
+  }
+}
+
+void ExecuteSignalHandlers() {
+  int signal_exit_count = g_signal_exit_count.exchange(0);
+  while (signal_exit_count--) {
+    ScreenInteractive::Private::Signal(*g_active_screen, SIGABRT);
+  }
+
+#if !defined(_WIN32)
+  int signal_stop_count = g_signal_stop_count.exchange(0);
+  while (signal_stop_count--) {
+    ScreenInteractive::Private::Signal(*g_active_screen, SIGTSTP);
+  }
+
+  int signal_resize_count = g_signal_resize_count.exchange(0);
+  while (signal_resize_count--) {
+    ScreenInteractive::Private::Signal(*g_active_screen, SIGWINCH);
+  }
+#endif
+}
+
+void InstallSignalHandler(int sig) {
+  auto old_signal_handler = std::signal(sig, RecordSignal);
+  on_exit_functions.push(
+      [=] { std::ignore = std::signal(sig, old_signal_handler); });
+}
 
 const std::string CSI = "\x1b[";  // NOLINT
 
 // DEC: Digital Equipment Corporation
 enum class DECMode {
   kLineWrap = 7,
-  kMouseX10 = 9,
   kCursor = 25,
+
+  kMouseX10 = 9,
   kMouseVt200 = 1000,
+  kMouseVt200Highlight = 1001,
+
+  kMouseBtnEventMouse = 1002,
   kMouseAnyEvent = 1003,
+
   kMouseUtf8 = 1005,
   kMouseSgrExtMode = 1006,
   kMouseUrxvtMode = 1015,
@@ -234,7 +307,7 @@ enum class DSRMode {
 std::string Serialize(const std::vector<DECMode>& parameters) {
   bool first = true;
   std::string out;
-  for (DECMode parameter : parameters) {
+  for (const DECMode parameter : parameters) {
     if (!first) {
       out += ";";
     }
@@ -257,31 +330,6 @@ std::string Reset(const std::vector<DECMode>& parameters) {
 // Device Status Report (DSR)
 std::string DeviceStatusReport(DSRMode ps) {
   return CSI + std::to_string(int(ps)) + "n";
-}
-
-using SignalHandler = void(int);
-std::stack<Closure> on_exit_functions;  // NOLINT
-void OnExit(int signal) {
-  (void)signal;
-  while (!on_exit_functions.empty()) {
-    on_exit_functions.top()();
-    on_exit_functions.pop();
-  }
-}
-
-const auto install_signal_handler = [](int sig, SignalHandler handler) {
-  auto old_signal_handler = std::signal(sig, handler);
-  on_exit_functions.push(
-      [=] { std::ignore = std::signal(sig, old_signal_handler); });
-};
-
-Closure g_on_resize = [] {};  // NOLINT
-void OnResize(int /* signal */) {
-  g_on_resize();
-}
-
-void OnSigStop(int /*signal*/) {
-  ScreenInteractive::Private::SigStop(*g_active_screen);
 }
 
 class CapturedMouseImpl : public CapturedMouseInterface {
@@ -407,10 +455,13 @@ void ScreenInteractive::PreMain() {
   // Suspend previously active screen:
   if (g_active_screen) {
     std::swap(suspended_screen_, g_active_screen);
-    std::cout << suspended_screen_->reset_cursor_position
-              << suspended_screen_->ResetPosition(/*clear=*/true);
+    // Reset cursor position to the top of the screen and clear the screen.
+    suspended_screen_->ResetCursorPosition();
+    std::cout << suspended_screen_->ResetPosition(/*clear=*/true);
     suspended_screen_->dimx_ = 0;
     suspended_screen_->dimy_ = 0;
+
+    // Reset dimensions to force drawing the screen again next time:
     suspended_screen_->Uninstall();
   }
 
@@ -422,23 +473,29 @@ void ScreenInteractive::PreMain() {
 }
 
 void ScreenInteractive::PostMain() {
-  g_active_screen->Uninstall();
-  g_active_screen = nullptr;
-
   // Put cursor position at the end of the drawing.
-  std::cout << reset_cursor_position;
+  ResetCursorPosition();
+
+  g_active_screen = nullptr;
 
   // Restore suspended screen.
   if (suspended_screen_) {
+    // Clear screen, and put the cursor at the beginning of the drawing.
     std::cout << ResetPosition(/*clear=*/true);
     dimx_ = 0;
     dimy_ = 0;
+    Uninstall();
     std::swap(g_active_screen, suspended_screen_);
     g_active_screen->Install();
   } else {
+    Uninstall();
+
+    std::cout << '\r';
     // On final exit, keep the current drawing and reset cursor position one
     // line after it.
-    std::cout << std::endl;
+    if (!use_alternative_screen_) {
+      std::cout << std::endl;
+    }
   }
 }
 
@@ -459,6 +516,8 @@ ScreenInteractive* ScreenInteractive::Active() {
 }
 
 void ScreenInteractive::Install() {
+  frame_valid_ = false;
+
   // After uninstalling the new configuration, flush it to the terminal to
   // ensure it is fully applied:
   on_exit_functions.push([] { Flush(); });
@@ -467,11 +526,11 @@ void ScreenInteractive::Install() {
 
   // Install signal handlers to restore the terminal state on exit. The default
   // signal handlers are restored on exit.
-  for (int signal : {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE}) {
-    install_signal_handler(signal, OnExit);
+  for (const int signal : {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE}) {
+    InstallSignalHandler(signal);
   }
 
-  // Save the old terminal configuration and restore it on exit.
+// Save the old terminal configuration and restore it on exit.
 #if defined(_WIN32)
   // Enable VT processing on stdout and stdin
   auto stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -503,6 +562,10 @@ void ScreenInteractive::Install() {
   SetConsoleMode(stdin_handle, in_mode);
   SetConsoleMode(stdout_handle, out_mode);
 #else
+  for (const int signal : {SIGWINCH, SIGTSTP}) {
+    InstallSignalHandler(signal);
+  }
+
   struct termios terminal;  // NOLINT
   tcgetattr(STDIN_FILENO, &terminal);
   on_exit_functions.push([=] { tcsetattr(STDIN_FILENO, TCSANOW, &terminal); });
@@ -517,17 +580,6 @@ void ScreenInteractive::Install() {
 
   tcsetattr(STDIN_FILENO, TCSANOW, &terminal);
 
-  // Handle resize.
-  //
-  // Since this will be executed in a signal handler, we need to do the
-  // absolute barest minimum necessary and push handling off to non signal-handling code.
-  g_on_resize = [&] { std::unique_lock<std::mutex> lock(g_resize_signal_mutex);
-	              g_resize_signal_occurred = true;
-                    };
-  install_signal_handler(SIGWINCH, OnResize);
-
-  // Handle SIGTSTP/SIGCONT.
-  install_signal_handler(SIGTSTP, OnSigStop);
 #endif
 
   auto enable = [&](const std::vector<DECMode>& parameters) {
@@ -552,19 +604,17 @@ void ScreenInteractive::Install() {
   });
 
   disable({
-      //DECMode::kCursor,
+      // DECMode::kCursor,
       DECMode::kLineWrap,
   });
 
-  enable({
-      // DECMode::kMouseVt200,
-      DECMode::kMouseAnyEvent,
-      DECMode::kMouseUtf8,
-      DECMode::kMouseSgrExtMode,
-  });
+  enable({DECMode::kMouseVt200});
+  enable({DECMode::kMouseAnyEvent});
+  enable({DECMode::kMouseUrxvtMode});
+  enable({DECMode::kMouseSgrExtMode});
 
-  // After installing the new configuration, flush it to the terminal to ensure
-  // it is fully applied:
+  // After installing the new configuration, flush it to the terminal to
+  // ensure it is fully applied:
   Flush();
 
   quit_ = false;
@@ -576,20 +626,19 @@ void ScreenInteractive::Install() {
 }
 
 void ScreenInteractive::Uninstall() {
-  ExitLoopClosure()();
+  ExitNow();
   event_listener_.join();
   animation_listener_.join();
-
-  OnExit(0);
+  OnExit();
 }
 
 // NOLINTNEXTLINE
 void ScreenInteractive::RunOnceBlocking(Component component) {
+  ExecuteSignalHandlers();
   Task task;
   if (task_receiver_->Receive(&task)) {
     HandleTask(component, task);
   }
-
   RunOnce(component);
 }
 
@@ -597,6 +646,7 @@ void ScreenInteractive::RunOnce(Component component) {
   Task task;
   while (task_receiver_->ReceiveNonBlocking(&task)) {
     HandleTask(component, task);
+    ExecuteSignalHandlers();
   }
   Draw(std::move(component));
 }
@@ -638,8 +688,8 @@ void ScreenInteractive::HandleTask(Component component, Task& task) {
       }
 
       animation_requested_ = false;
-      animation::TimePoint now = animation::Clock::now();
-      animation::Duration delta = now - previous_animation_time_;
+      const animation::TimePoint now = animation::Clock::now();
+      const animation::Duration delta = now - previous_animation_time_;
       previous_animation_time_ = now;
 
       animation::Params params(delta);
@@ -660,30 +710,30 @@ void ScreenInteractive::Draw(Component component) {
   auto document = component->Render();
   int dimx = 0;
   int dimy = 0;
+  auto terminal = Terminal::Size();
+  document->ComputeRequirement();
   switch (dimension_) {
     case Dimension::Fixed:
       dimx = dimx_;
       dimy = dimy_;
       break;
     case Dimension::TerminalOutput:
-      document->ComputeRequirement();
-      dimx = Terminal::Size().dimx;
+      dimx = terminal.dimx;
       dimy = document->requirement().min_y;
       break;
     case Dimension::Fullscreen:
-      dimx = Terminal::Size().dimx;
-      dimy = Terminal::Size().dimy;
+      dimx = terminal.dimx;
+      dimy = terminal.dimy;
       break;
     case Dimension::FitComponent:
-      auto terminal = Terminal::Size();
-      document->ComputeRequirement();
       dimx = std::min(document->requirement().min_x, terminal.dimx);
       dimy = std::min(document->requirement().min_y, terminal.dimy);
       break;
   }
 
-  bool resized = (dimx != dimx_) || (dimy != dimy_);
-  std::cout << reset_cursor_position << ResetPosition(/*clear=*/resized);
+  const bool resized = (dimx != dimx_) || (dimy != dimy_);
+  ResetCursorPosition();
+  std::cout << ResetPosition(/*clear=*/resized);
 
   // Resize the screen if needed.
   if (resized) {
@@ -722,28 +772,21 @@ void ScreenInteractive::Draw(Component component) {
   Render(*this, document);
 
   // Set cursor position for user using tools to insert CJK characters.
-  set_cursor_position = "";
-  reset_cursor_position = "";
-
   {
-    int dx = dimx_ - 1 - cursor_.x;
-    int dy = dimy_ - 1 - cursor_.y;
+    const int dx = dimx_ - 1 - cursor_.x + int(dimx_ != terminal.dimx);
+    const int dy = dimy_ - 1 - cursor_.y;
 
-    if (dy != 0) {
-      set_cursor_position += "\x1B[" + std::to_string(dy) + "A";
-      reset_cursor_position += "\x1B[" + std::to_string(dy) + "B";
-    }
-
-    if (dx != 0) {
-      set_cursor_position += "\x1B[" + std::to_string(dx) + "D";
-      reset_cursor_position += "\x1B[" + std::to_string(dx) + "C";
-    }
+    set_cursor_position = "\x1B[" + std::to_string(dy) + "A" +  //
+                          "\x1B[" + std::to_string(dx) + "D";
+    reset_cursor_position = "\x1B[" + std::to_string(dy) + "B" +  //
+                            "\x1B[" + std::to_string(dx) + "C";
 
     if (cursor_.shape == Cursor::Hidden) {
       set_cursor_position += "\033[?25l";
     } else {
       set_cursor_position += "\033[?25h";
-      set_cursor_position += "\033[" + std::to_string(int(cursor_.shape)) + " q";
+      set_cursor_position +=
+          "\033[" + std::to_string(int(cursor_.shape)) + " q";
     }
   }
 
@@ -753,32 +796,50 @@ void ScreenInteractive::Draw(Component component) {
   frame_valid_ = true;
 }
 
+void ScreenInteractive::ResetCursorPosition() {
+  std::cout << reset_cursor_position;
+  reset_cursor_position = "";
+}
+
 Closure ScreenInteractive::ExitLoopClosure() {
   return [this] { Exit(); };
 }
 
 void ScreenInteractive::Exit() {
-  Post([this] {
-    quit_ = true;
-    task_sender_.reset();
-  });
+  Post([this] { ExitNow(); });
 }
 
-void ScreenInteractive::SigStop() {
-#if defined(_WIN32)
-  // Windows do no support SIGTSTP.
-#else
-  Post([&] {
-    Uninstall();
-    std::cout << reset_cursor_position;
-    reset_cursor_position = "";
-    std::cout << ResetPosition(/*clear=*/true);
-    dimx_ = 0;
-    dimy_ = 0;
-    Flush();
-    std::ignore = std::raise(SIGTSTP);
-    Install();
-  });
+void ScreenInteractive::ExitNow() {
+  quit_ = true;
+  task_sender_.reset();
+}
+
+void ScreenInteractive::Signal(int signal) {
+  if (signal == SIGABRT) {
+    OnExit();
+    return;
+  }
+
+// Windows do no support SIGTSTP / SIGWINCH
+#if !defined(_WIN32)
+  if (signal == SIGTSTP) {
+    Post([&] {
+      ResetCursorPosition();
+      std::cout << ResetPosition(/*clear*/ true);  // Cursor to the beginning
+      Uninstall();
+      dimx_ = 0;
+      dimy_ = 0;
+      Flush();
+      std::ignore = std::raise(SIGTSTP);
+      Install();
+    });
+    return;
+  }
+
+  if (signal == SIGWINCH) {
+    Post(Event::Special({0}));
+    return;
+  }
 #endif
 }
 

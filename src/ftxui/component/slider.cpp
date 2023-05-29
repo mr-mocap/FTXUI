@@ -1,6 +1,8 @@
 #include <algorithm>                              // for max, min
 #include <ftxui/component/component_options.hpp>  // for SliderOption
-#include <string>                                 // for allocator
+#include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
+#include <string>                   // for allocator
+#include <utility>                  // for move
 
 #include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
 #include "ftxui/component/component.hpp"       // for Make, Slider
@@ -8,22 +10,22 @@
 #include "ftxui/component/event.hpp"  // for Event, Event::ArrowDown, Event::ArrowLeft, Event::ArrowRight, Event::ArrowUp
 #include "ftxui/component/mouse.hpp"  // for Mouse, Mouse::Left, Mouse::Pressed, Mouse::Released
 #include "ftxui/component/screen_interactive.hpp"  // for Component
-#include "ftxui/dom/elements.hpp"  // for operator|, text, GaugeDirection, Element, xflex, hbox, color, underlined, GaugeDirection::Down, GaugeDirection::Left, GaugeDirection::Right, GaugeDirection::Up, reflect, Decorator, dim, vcenter, yflex, gaugeDirection
+#include "ftxui/dom/elements.hpp"  // for operator|, text, Element, xflex, hbox, color, underlined, reflect, Decorator, dim, vcenter, focus, nothing, select, yflex, gaugeDirection
 #include "ftxui/screen/box.hpp"    // for Box
 #include "ftxui/screen/color.hpp"  // for Color, Color::GrayDark, Color::White
 #include "ftxui/screen/util.hpp"   // for clamp
-#include "ftxui/util/ref.hpp"      // for ConstRef, ConstStringRef, Ref
+#include "ftxui/util/ref.hpp"      // for ConstRef, Ref, ConstStringRef
 
 namespace ftxui {
 
 namespace {
-Decorator flexDirection(GaugeDirection direction) {
+Decorator flexDirection(Direction direction) {
   switch (direction) {
-    case GaugeDirection::Up:
-    case GaugeDirection::Down:
+    case Direction::Up:
+    case Direction::Down:
       return yflex;
-    case GaugeDirection::Left:
-    case GaugeDirection::Right:
+    case Direction::Left:
+    case Direction::Right:
       return xflex;
   }
   return xflex;  // NOT_REACHED()
@@ -43,7 +45,7 @@ class SliderBase : public ComponentBase {
   Element Render() override {
     auto gauge_color = Focused() ? color(options_->color_active)
                                  : color(options_->color_inactive);
-    float percent = float(value_() - min_()) / float(max_() - min_());
+    const float percent = float(value_() - min_()) / float(max_() - min_());
     return gaugeDirection(percent, options_->direction) |
            flexDirection(options_->direction) | reflect(gauge_box_) |
            gauge_color;
@@ -51,56 +53,56 @@ class SliderBase : public ComponentBase {
 
   void OnLeft() {
     switch (options_->direction) {
-      case GaugeDirection::Right:
+      case Direction::Right:
         value_() -= increment_();
         break;
-      case GaugeDirection::Left:
+      case Direction::Left:
         value_() += increment_();
         break;
-      case GaugeDirection::Up:
-      case GaugeDirection::Down:
+      case Direction::Up:
+      case Direction::Down:
         break;
     }
   }
 
   void OnRight() {
     switch (options_->direction) {
-      case GaugeDirection::Right:
+      case Direction::Right:
         value_() += increment_();
         break;
-      case GaugeDirection::Left:
+      case Direction::Left:
         value_() -= increment_();
         break;
-      case GaugeDirection::Up:
-      case GaugeDirection::Down:
+      case Direction::Up:
+      case Direction::Down:
         break;
     }
   }
 
   void OnUp() {
     switch (options_->direction) {
-      case GaugeDirection::Up:
+      case Direction::Up:
         value_() -= increment_();
         break;
-      case GaugeDirection::Down:
+      case Direction::Down:
         value_() += increment_();
         break;
-      case GaugeDirection::Left:
-      case GaugeDirection::Right:
+      case Direction::Left:
+      case Direction::Right:
         break;
     }
   }
 
   void OnDown() {
     switch (options_->direction) {
-      case GaugeDirection::Down:
+      case Direction::Down:
         value_() -= increment_();
         break;
-      case GaugeDirection::Up:
+      case Direction::Up:
         value_() += increment_();
         break;
-      case GaugeDirection::Left:
-      case GaugeDirection::Right:
+      case Direction::Left:
+      case Direction::Right:
         break;
     }
   }
@@ -152,25 +154,25 @@ class SliderBase : public ComponentBase {
 
     if (captured_mouse_) {
       switch (options_->direction) {
-        case GaugeDirection::Right: {
+        case Direction::Right: {
           value_() = min_() + (event.mouse().x - gauge_box_.x_min) *
                                   (max_() - min_()) /
                                   (gauge_box_.x_max - gauge_box_.x_min);
           break;
         }
-        case GaugeDirection::Left: {
+        case Direction::Left: {
           value_() = max_() - (event.mouse().x - gauge_box_.x_min) *
                                   (max_() - min_()) /
                                   (gauge_box_.x_max - gauge_box_.x_min);
           break;
         }
-        case GaugeDirection::Down: {
+        case Direction::Down: {
           value_() = min_() + (event.mouse().y - gauge_box_.y_min) *
                                   (max_() - min_()) /
                                   (gauge_box_.y_max - gauge_box_.y_min);
           break;
         }
-        case GaugeDirection::Up: {
+        case Direction::Up: {
           value_() = max_() - (event.mouse().y - gauge_box_.y_min) *
                                   (max_() - min_()) /
                                   (gauge_box_.y_max - gauge_box_.y_min);
@@ -226,6 +228,7 @@ class SliderWithLabel : public ComponentBase {
   }
 
   Element Render() override {
+    auto focus_management = Focused() ? focus : Active() ? select : nothing;
     auto gauge_color = Focused() ? color(Color::White) : color(Color::GrayDark);
     return hbox({
                text(label_()) | dim | vcenter,
@@ -235,7 +238,7 @@ class SliderWithLabel : public ComponentBase {
                    text("]"),
                }) | xflex,
            }) |
-           gauge_color | xflex | reflect(box_);
+           gauge_color | xflex | reflect(box_) | focus_management;
   }
 
   ConstStringRef label_;
@@ -306,7 +309,7 @@ Component Slider(ConstStringRef label,
 }
 
 /// @brief A slider in any direction.
-/// @param option The options
+/// @param options The options
 /// ### Example
 ///
 /// ```cpp
@@ -324,9 +327,18 @@ template <typename T>
 Component Slider(SliderOption<T> options) {
   return Make<SliderBase<T>>(options);
 }
-template Component Slider(SliderOption<int> options);
-template Component Slider(SliderOption<float> options);
-template Component Slider(SliderOption<long> options);
+template Component Slider(SliderOption<int8_t>);
+template Component Slider(SliderOption<int16_t>);
+template Component Slider(SliderOption<int32_t>);
+template Component Slider(SliderOption<int64_t>);
+
+template Component Slider(SliderOption<uint8_t>);
+template Component Slider(SliderOption<uint16_t>);
+template Component Slider(SliderOption<uint32_t>);
+template Component Slider(SliderOption<uint64_t>);
+
+template Component Slider(SliderOption<float>);
+template Component Slider(SliderOption<double>);
 
 }  // namespace ftxui
 

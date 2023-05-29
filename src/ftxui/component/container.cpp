@@ -44,13 +44,13 @@ class ContainerBase : public ComponentBase {
       return nullptr;
     }
 
-    return children_[*selector_ % children_.size()];
+    return children_[static_cast<size_t>(*selector_) % children_.size()];
   }
 
   void SetActiveChild(ComponentBase* child) override {
     for (size_t i = 0; i < children_.size(); ++i) {
       if (children_[i].get() == child) {
-        *selector_ = (int)i;
+        *selector_ = static_cast<int>(i);
         return;
       }
     }
@@ -68,7 +68,7 @@ class ContainerBase : public ComponentBase {
   int* selector_ = nullptr;
 
   void MoveSelector(int dir) {
-    for (int i = *selector_ + dir; i >= 0 && i < (int)children_.size();
+    for (int i = *selector_ + dir; i >= 0 && i < int(children_.size());
          i += dir) {
       if (children_[i]->Focusable()) {
         *selector_ = i;
@@ -82,10 +82,10 @@ class ContainerBase : public ComponentBase {
       return;
     }
     for (size_t offset = 1; offset < children_.size(); ++offset) {
-      size_t i = ((size_t(*selector_ + offset * dir + children_.size())) %
-                  children_.size());
+      const size_t i = ((size_t(*selector_ + offset * dir + children_.size())) %
+                        children_.size());
       if (children_[i]->Focusable()) {
-        *selector_ = (int)i;
+        *selector_ = int(i);
         return;
       }
     }
@@ -108,7 +108,7 @@ class VerticalContainer : public ContainerBase {
   }
 
   bool EventHandler(Event event) override {
-    int old_selected = *selector_;
+    const int old_selected = *selector_;
     if (event == Event::ArrowUp || event == Event::Character('k')) {
       MoveSelector(-1);
     }
@@ -190,7 +190,7 @@ class HorizontalContainer : public ContainerBase {
   }
 
   bool EventHandler(Event event) override {
-    int old_selected = *selector_;
+    const int old_selected = *selector_;
     if (event == Event::ArrowLeft || event == Event::Character('h')) {
       MoveSelector(-1);
     }
@@ -214,7 +214,7 @@ class TabContainer : public ContainerBase {
   using ContainerBase::ContainerBase;
 
   Element Render() override {
-    Component active_child = ActiveChild();
+    const Component active_child = ActiveChild();
     if (active_child) {
       return active_child->Render();
     }
@@ -225,11 +225,11 @@ class TabContainer : public ContainerBase {
     if (children_.empty()) {
       return false;
     }
-    return children_[*selector_ % children_.size()]->Focusable();
+    return children_[size_t(*selector_) % children_.size()]->Focusable();
   }
 
   bool OnMouseEvent(Event event) override {
-    return ActiveChild()->OnEvent(event);
+    return ActiveChild() && ActiveChild()->OnEvent(event);
   }
 };
 

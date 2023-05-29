@@ -51,8 +51,9 @@ Component Checkbox(ConstStringRef label,
                    bool* checked,
                    Ref<CheckboxOption> option = CheckboxOption::Simple());
 
+Component Input(StringRef content, Ref<InputOption> option = {});
 Component Input(StringRef content,
-                ConstStringRef placeholder,
+                StringRef placeholder,
                 Ref<InputOption> option = {});
 
 Component Menu(ConstStringListRef entries,
@@ -67,6 +68,11 @@ Component Radiobox(ConstStringListRef entries,
                    Ref<RadioboxOption> option = {});
 Component Toggle(ConstStringListRef entries, int* selected);
 
+// General slider constructor:
+template <typename T>
+Component Slider(SliderOption<T> options = {});
+
+// Shorthand without the `SliderOption` constructor:
 Component Slider(ConstStringRef label,
                  Ref<int> value,
                  ConstRef<int> min = 0,
@@ -82,14 +88,12 @@ Component Slider(ConstStringRef label,
                  ConstRef<long> min = 0l,
                  ConstRef<long> max = 100l,
                  ConstRef<long> increment = 5l);
-// General slider type without support for a `label`.
-template <typename T>  // T = {int, float, long}
-Component Slider(SliderOption<T> options = {});
 
 Component ResizableSplitLeft(Component main, Component back, int* main_size);
 Component ResizableSplitRight(Component main, Component back, int* main_size);
 Component ResizableSplitTop(Component main, Component back, int* main_size);
 Component ResizableSplitBottom(Component main, Component back, int* main_size);
+Component ResizableSplit(ResizableSplitOption options);
 
 Component Renderer(Component child, std::function<Element()>);
 Component Renderer(std::function<Element()>);
@@ -110,6 +114,18 @@ ComponentDecorator Modal(Component modal, const bool* show_modal);
 Component Collapsible(ConstStringRef label,
                       Component child,
                       Ref<bool> show = false);
+
+Component Hoverable(Component component, bool* hover);
+Component Hoverable(Component component,
+                    std::function<void()> on_enter,
+                    std::function<void()> on_leave);
+Component Hoverable(Component component,  //
+                    std::function<void(bool)> on_change);
+ComponentDecorator Hoverable(bool* hover);
+ComponentDecorator Hoverable(std::function<void()> on_enter,
+                             std::function<void()> on_leave);
+ComponentDecorator Hoverable(std::function<void(bool)> on_change);
+
 }  // namespace ftxui
 
 #endif /* end of include guard: FTXUI_COMPONENT_HPP */

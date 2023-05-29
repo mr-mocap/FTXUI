@@ -49,6 +49,7 @@ void WindowsEmulateVT100Terminal() {
 }
 #endif
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 void UpdatePixelStyle(std::stringstream& ss,
                       Pixel& previous,
                       const Pixel& next) {
@@ -66,6 +67,16 @@ void UpdatePixelStyle(std::stringstream& ss,
     previous.dim = false;
   }
 
+  if ((!next.underlined && previous.underlined) ||
+      (!next.underlined_double && previous.underlined_double)) {
+    // We might have wrongfully reset underlined or underlinedbold because they
+    // share the same resetter. Take it into account so that the side effect
+    // will cause it to be set again below.
+    ss << "\x1B[24m";  // UNDERLINED_RESET
+    previous.underlined = false;
+    previous.underlined_double = false;
+  }
+
   if (next.bold && !previous.bold) {
     ss << "\x1B[1m";  // BOLD_SET
   }
@@ -76,10 +87,6 @@ void UpdatePixelStyle(std::stringstream& ss,
 
   if (next.underlined && !previous.underlined) {
     ss << "\x1B[4m";  // UNDERLINED_SET
-  }
-
-  if (!next.underlined && previous.underlined) {
-    ss << "\x1B[24m";  // UNDERLINED_RESET
   }
 
   if (next.blink && !previous.blink) {
@@ -96,6 +103,18 @@ void UpdatePixelStyle(std::stringstream& ss,
 
   if (!next.inverted && previous.inverted) {
     ss << "\x1B[27m";  // INVERTED_RESET
+  }
+
+  if (next.strikethrough && !previous.strikethrough) {
+    ss << "\x1B[9m";  // CROSSED_OUT
+  }
+
+  if (!next.strikethrough && previous.strikethrough) {
+    ss << "\x1B[29m";  // CROSSED_OUT_RESET
+  }
+
+  if (next.underlined_double && !previous.underlined_double) {
+    ss << "\x1B[21m";  // DOUBLE_UNDERLINED_SET
   }
 
   if (next.foreground_color != previous.foreground_color ||
@@ -135,9 +154,11 @@ struct TileEncoding {
 const std::map<std::string, TileEncoding> tile_encoding = { // NOLINT
     {"─", {1, 0, 1, 0, 0}},
     {"━", {2, 0, 2, 0, 0}},
+    {"╍", {2, 0, 2, 0, 0}},
 
     {"│", {0, 1, 0, 1, 0}},
     {"┃", {0, 2, 0, 2, 0}},
+    {"╏", {0, 2, 0, 2, 0}},
 
     {"┌", {0, 0, 1, 1, 0}},
     {"┍", {0, 0, 2, 1, 0}},
@@ -410,7 +431,7 @@ std::string Screen::ToString() {
   std::stringstream ss;
 
   Pixel previous_pixel;
-  Pixel final_pixel;
+  const Pixel final_pixel;
 
   for (int y = 0; y < dimy_; ++y) {
     if (y != 0) {

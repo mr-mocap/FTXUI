@@ -1,6 +1,7 @@
 #include "ftxui/dom/canvas.hpp"
 
 #include <algorithm>               // for max, min
+#include <cmath>                   // for abs
 #include <cstdint>                 // for uint8_t
 #include <cstdlib>                 // for abs
 #include <ftxui/screen/color.hpp>  // for Color
@@ -320,11 +321,11 @@ void Canvas::DrawPointEllipse(int x,
 }
 
 /// @brief Draw an ellipse made of braille dots.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
-/// @param style the style of the ellipse.
+/// @param s the style of the ellipse.
 void Canvas::DrawPointEllipse(int x1,
                               int y1,
                               int r1,
@@ -360,8 +361,8 @@ void Canvas::DrawPointEllipse(int x1,
 }
 
 /// @brief Draw a filled ellipse made of braille dots.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
 void Canvas::DrawPointEllipseFilled(int x1, int y1, int r1, int r2) {
@@ -369,8 +370,8 @@ void Canvas::DrawPointEllipseFilled(int x1, int y1, int r1, int r2) {
 }
 
 /// @brief Draw a filled ellipse made of braille dots.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
 /// @param color the color of the ellipse.
@@ -384,11 +385,11 @@ void Canvas::DrawPointEllipseFilled(int x1,
 }
 
 /// @brief Draw a filled ellipse made of braille dots.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
-/// @param style the style of the ellipse.
+/// @param s the style of the ellipse.
 void Canvas::DrawPointEllipseFilled(int x1,
                                     int y1,
                                     int r1,
@@ -409,11 +410,11 @@ void Canvas::DrawPointEllipseFilled(int x1,
     e2 = 2 * err;
     if (e2 >= dx) {
       x++;
-      err += dx += 2 * (long)r2 * r2;  // NOLINT
+      err += dx += 2 * r2 * r2;
     }
     if (e2 <= dy) {
       y++;
-      err += dy += 2 * (long)r1 * r1;  // NOLINT
+      err += dy += 2 * r1 * r1;
     }
   } while (x <= 0);
 
@@ -469,7 +470,7 @@ void Canvas::DrawBlockOn(int x, int y) {
     cell.type = CellType::kBlock;
   }
 
-  uint8_t bit = (x % 2) * 2 + y % 2;
+  const uint8_t bit = (x % 2) * 2 + y % 2;
   uint8_t value = g_map_block_inversed.at(cell.content.character);
   value |= 1U << bit;
   cell.content.character = g_map_block[value];
@@ -489,7 +490,7 @@ void Canvas::DrawBlockOff(int x, int y) {
   }
   y /= 2;
 
-  uint8_t bit = (y % 2) * 2 + x % 2;
+  const uint8_t bit = (y % 2) * 2 + x % 2;
   uint8_t value = g_map_block_inversed.at(cell.content.character);
   value &= ~(1U << bit);
   cell.content.character = g_map_block[value];
@@ -510,7 +511,7 @@ void Canvas::DrawBlockToggle(int x, int y) {
   }
   y /= 2;
 
-  uint8_t bit = (y % 2) * 2 + x % 2;
+  const uint8_t bit = (y % 2) * 2 + x % 2;
   uint8_t value = g_map_block_inversed.at(cell.content.character);
   value ^= 1U << bit;
   cell.content.character = g_map_block[value];
@@ -630,7 +631,7 @@ void Canvas::DrawBlockCircleFilled(int x,
 /// @param x the x coordinate of the center of the circle.
 /// @param y the y coordinate of the center of the circle.
 /// @param radius the radius of the circle.
-/// @param style the style of the circle.
+/// @param s the style of the circle.
 void Canvas::DrawBlockCircleFilled(int x,
                                    int y,
                                    int radius,
@@ -663,11 +664,11 @@ void Canvas::DrawBlockEllipse(int x,
 }
 
 /// @brief Draw an ellipse made of block characters.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
-/// @param style the style of the ellipse.
+/// @param s the style of the ellipse.
 void Canvas::DrawBlockEllipse(int x1,
                               int y1,
                               int r1,
@@ -729,11 +730,11 @@ void Canvas::DrawBlockEllipseFilled(int x,
 }
 
 /// @brief Draw a filled ellipse made of block characters.
-/// @param x the x coordinate of the center of the ellipse.
-/// @param y the y coordinate of the center of the ellipse.
+/// @param x1 the x coordinate of the center of the ellipse.
+/// @param y1 the y coordinate of the center of the ellipse.
 /// @param r1 the radius of the ellipse along the x axis.
 /// @param r2 the radius of the ellipse along the y axis.
-/// @param style the style of the ellipse.
+/// @param s the style of the ellipse.
 void Canvas::DrawBlockEllipseFilled(int x1,
                                     int y1,
                                     int r1,
@@ -829,8 +830,8 @@ class CanvasNodeBase : public Node {
 
   void Render(Screen& screen) override {
     const Canvas& c = canvas();
-    int y_max = std::min(c.height() / 4, box_.y_max - box_.y_min + 1);
-    int x_max = std::min(c.width() / 2, box_.x_max - box_.x_min + 1);
+    const int y_max = std::min(c.height() / 4, box_.y_max - box_.y_min + 1);
+    const int x_max = std::min(c.width() / 2, box_.x_max - box_.x_min + 1);
     for (int y = 0; y < y_max; ++y) {
       for (int x = 0; x < x_max; ++x) {
         screen.PixelAt(box_.x_min + x, box_.y_min + y) = c.GetPixel(x, y);
@@ -873,8 +874,8 @@ Element canvas(int width, int height, std::function<void(Canvas&)> fn) {
     }
 
     void Render(Screen& screen) final {
-      int width = (box_.x_max - box_.x_min + 1) * 2;
-      int height = (box_.y_max - box_.y_min + 1) * 4;
+      const int width = (box_.x_max - box_.x_min + 1) * 2;
+      const int height = (box_.y_max - box_.y_min + 1) * 4;
       canvas_ = Canvas(width, height);
       fn_(canvas_);
       CanvasNodeBase::Render(screen);

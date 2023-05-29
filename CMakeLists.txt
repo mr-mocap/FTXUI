@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 project(ftxui
   LANGUAGES CXX
-  VERSION 3.0.0
+  VERSION 4.0.0
+  DESCRIPTION "C++ Functional Terminal User Interface."
 )
 
 option(FTXUI_BUILD_DOCS "Set to ON to build docs" ON)
@@ -12,6 +13,7 @@ option(FTXUI_BUILD_TESTS_FUZZER "Set to ON to enable fuzzing" OFF)
 option(FTXUI_ENABLE_INSTALL "Generate the install target" ON)
 option(FTXUI_CLANG_TIDY "Execute clang-tidy" OFF)
 option(FTXUI_ENABLE_COVERAGE "Execute code coverage" OFF)
+option(FTXUI_DEV_WARNINGS "Enable more compiler warnings and warnings as errors" OFF)
 
 set(FTXUI_MICROSOFT_TERMINAL_FALLBACK_HELP_TEXT "On windows, assume the \
 terminal used will be one of Microsoft and use a set of reasonnable fallback \
@@ -42,6 +44,7 @@ add_library(screen
 
 add_library(dom
   include/ftxui/dom/canvas.hpp
+  include/ftxui/dom/direction.hpp
   include/ftxui/dom/elements.hpp
   include/ftxui/dom/flexbox_config.hpp
   include/ftxui/dom/node.hpp
@@ -71,6 +74,7 @@ add_library(dom
   src/ftxui/dom/gridbox.cpp
   src/ftxui/dom/hbox.cpp
   src/ftxui/dom/inverted.cpp
+  src/ftxui/dom/linear_gradient.cpp
   src/ftxui/dom/node.cpp
   src/ftxui/dom/node_decorator.cpp
   src/ftxui/dom/paragraph.cpp
@@ -79,9 +83,11 @@ add_library(dom
   src/ftxui/dom/separator.cpp
   src/ftxui/dom/size.cpp
   src/ftxui/dom/spinner.cpp
+  src/ftxui/dom/strikethrough.cpp
   src/ftxui/dom/table.cpp
   src/ftxui/dom/text.cpp
   src/ftxui/dom/underlined.cpp
+  src/ftxui/dom/underlined_double.cpp
   src/ftxui/dom/util.cpp
   src/ftxui/dom/vbox.cpp
 )
@@ -108,6 +114,7 @@ add_library(component
   src/ftxui/component/container.cpp
   src/ftxui/component/dropdown.cpp
   src/ftxui/component/event.cpp
+  src/ftxui/component/hoverable.cpp
   src/ftxui/component/input.cpp
   src/ftxui/component/loop.cpp
   src/ftxui/component/maybe.cpp
@@ -128,11 +135,16 @@ target_link_libraries(dom
   PUBLIC screen
 )
 
-find_package(Threads)
 target_link_libraries(component
   PUBLIC dom
-  PUBLIC Threads::Threads
 )
+
+if (NOT EMSCRIPTEN)
+  find_package(Threads)
+  target_link_libraries(component
+    PUBLIC Threads::Threads
+  )
+endif()
 
 include(cmake/ftxui_set_options.cmake)
 ftxui_set_options(screen)
@@ -144,22 +156,13 @@ ftxui_check_coverage(screen)
 ftxui_check_coverage(dom)
 ftxui_check_coverage(component)
 
-if (FTXUI_BUILD_TESTS AND ${CMAKE_VERSION} VERSION_GREATER "3.11.4")
-  include(cmake/ftxui_test.cmake)
-endif()
-
-if(FTXUI_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
-if(FTXUI_BUILD_DOCS)
-  add_subdirectory(doc)
-endif()
-
+include(cmake/ftxui_test.cmake)
+include(cmake/ftxui_benchmark.cmake)
+include(cmake/ftxui_fuzzer.cmake)
 include(cmake/iwyu.cmake)
 include(cmake/ftxui_export.cmake)
+include(cmake/ftxui_install.cmake)
+include(cmake/ftxui_package.cmake)
 
-if(FTXUI_ENABLE_INSTALL)
-  include(cmake/ftxui_install.cmake)
-  include(cmake/ftxui_package.cmake)
-endif()
+add_subdirectory(examples)
+add_subdirectory(doc)

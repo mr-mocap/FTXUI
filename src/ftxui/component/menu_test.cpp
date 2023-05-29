@@ -1,18 +1,20 @@
-#include <gtest/gtest.h>
-#include <chrono>  // for operator""s, chrono_literals
+#include <gtest/gtest.h>  // for Test, EXPECT_EQ, Message, TestPartResult, TestInfo (ptr only), TEST
+#include <chrono>                   // for operator""s, chrono_literals
+#include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
 #include <memory>  // for __shared_ptr_access, shared_ptr, allocator
-#include <string>  // for string
+#include <string>  // for string, basic_string
 #include <vector>  // for vector
 
 #include "ftxui/component/animation.hpp"          // for Duration, Params
 #include "ftxui/component/component.hpp"          // for Menu
 #include "ftxui/component/component_base.hpp"     // for ComponentBase
-#include "ftxui/component/component_options.hpp"  // for MenuOption, MenuOption::Down, MenuOption::Left, MenuOption::Right, MenuOption::Up
+#include "ftxui/component/component_options.hpp"  // for MenuOption
 #include "ftxui/component/event.hpp"  // for Event, Event::ArrowDown, Event::ArrowLeft, Event::ArrowRight, Event::ArrowUp, Event::Return
 #include "ftxui/dom/node.hpp"         // for Render
 #include "ftxui/screen/screen.hpp"    // for Screen
 #include "ftxui/util/ref.hpp"         // for Ref
 
+// NOLINTBEGIN
 namespace ftxui {
 
 using namespace std::chrono_literals;
@@ -53,7 +55,7 @@ TEST(MenuTest, DirectionDown) {
   auto menu = Menu(&entries, &selected, &option);
 
   selected = 0;
-  option.direction = MenuOption::Down;
+  option.direction = Direction::Down;
   Screen screen(4, 3);
   Render(screen, menu->Render());
   EXPECT_EQ(screen.ToString(),
@@ -80,7 +82,7 @@ TEST(MenuTest, DirectionsUp) {
   std::vector<std::string> entries = {"1", "2", "3"};
   MenuOption option;
   auto menu = Menu(&entries, &selected, &option);
-  option.direction = MenuOption::Up;
+  option.direction = Direction::Up;
   Screen screen(4, 3);
   Render(screen, menu->Render());
   EXPECT_EQ(screen.ToString(),
@@ -106,7 +108,7 @@ TEST(MenuTest, DirectionsRight) {
   std::vector<std::string> entries = {"1", "2", "3"};
   MenuOption option;
   auto menu = Menu(&entries, &selected, &option);
-  option.direction = MenuOption::Right;
+  option.direction = Direction::Right;
   Screen screen(10, 1);
   Render(screen, menu->Render());
   EXPECT_EQ(screen.ToString(),
@@ -132,7 +134,7 @@ TEST(MenuTest, DirectionsLeft) {
   std::vector<std::string> entries = {"1", "2", "3"};
   MenuOption option;
   auto menu = Menu(&entries, &selected, &option);
-  option.direction = MenuOption::Left;
+  option.direction = Direction::Left;
   Screen screen(10, 1);
   Render(screen, menu->Render());
   EXPECT_EQ(screen.ToString(),
@@ -232,6 +234,7 @@ TEST(MenuTest, AnimationsVertical) {
 }
 
 }  // namespace ftxui
+// NOLINTEND
 
 // Copyright 2022 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in
