@@ -25,8 +25,6 @@ int main(int argc, const char* argv[]) {
     // In C++17:
     SliderOption<int> option;
     option.value = &values[i];
-    option.max = 100;
-    option.increment = 5;
     option.direction = Direction::Up;
     layout_horizontal->Add(Slider<int>(option));
 

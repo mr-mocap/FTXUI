@@ -3,6 +3,7 @@
 
 #include <ftxui/screen/string.hpp>
 #include <string>
+#include <variant>
 
 namespace ftxui {
 
@@ -10,16 +11,25 @@ namespace ftxui {
 template <typename T>
 class ConstRef {
  public:
-  ConstRef() {}
-  ConstRef(T t) : owned_(t) {}
-  ConstRef(const T* t) : address_(t) {}
-  const T& operator*() const { return address_ ? *address_ : owned_; }
-  const T& operator()() const { return address_ ? *address_ : owned_; }
-  const T* operator->() const { return address_ ? address_ : &owned_; }
+  ConstRef() = delete;
+  ConstRef(const T &t) : variant_(t) {}
+  ConstRef(const T *t) : variant_(t) {}
 
+  ConstRef(ConstRef<T> &&) = delete;
+  ConstRef(const ConstRef<T> &) = default;
+  ConstRef<T>& operator=(ConstRef<T>&) = delete;
+
+  const T& operator*() const { return std::holds_alternative<const T>(variant_) ?  std::get<const T>(variant_)
+                                                                                : *std::get<const T *>(variant_);
+  }
+  const T& operator()() const { return std::holds_alternative<const T>(variant_) ? std::get<const T>(variant_)
+                                                                                : *std::get<const T *>(variant_);
+  }
+  const T* operator->() const { return std::holds_alternative<const T *>(variant_) ?  std::get<const T *>(variant_)
+                                                                                   : &std::get<const T >(variant_);
+  }
  private:
-  T owned_;
-  const T* address_ = nullptr;
+  std::variant<const T*, const T> variant_ = nullptr;
 };
 
 /// @brief An adapter. Own or reference an mutable object.
@@ -27,16 +37,36 @@ template <typename T>
 class Ref {
  public:
   Ref() {}
-  Ref(const T& t) : owned_(t) {}
-  Ref(T&& t) : owned_(std::forward<T>(t)) {}
-  Ref(T* t) : owned_(), address_(t) {}
-  T& operator*() { return address_ ? *address_ : owned_; }
-  T& operator()() { return address_ ? *address_ : owned_; }
-  T* operator->() { return address_ ? address_ : &owned_; }
+  Ref(const T& t) : variant_(t) {}
+  Ref(T&& t) : variant_(std::forward<T>(t)) {}
+  Ref(T* t) : variant_(t) {}
+  T& operator*() {
+    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
+                                               : *std::get<T *>(variant_);
+  }
+  T& operator()() {
+    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
+                                               : *std::get<T *>(variant_);
+  }
+  T* operator->() {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               :  std::get<T *>(variant_);
+  }
 
+  const T& operator*() const {
+    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
+                                               : *std::get<T *>(variant_);
+  }
+  const T& operator()() const {
+    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
+                                               : *std::get<T *>(variant_);
+  }
+  const T* operator->() const {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               :  std::get<T *>(variant_);
+  }
  private:
-  T owned_;
-  T* address_ = nullptr;
+  std::variant<T *, T> variant_;
 };
 
 /// @brief An adapter. Own or reference a constant string. For convenience, this

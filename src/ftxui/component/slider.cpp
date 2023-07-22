@@ -272,12 +272,9 @@ Component Slider(ConstStringRef label,
                  ConstRef<int> min,
                  ConstRef<int> max,
                  ConstRef<int> increment) {
-  SliderOption<int> option;
-  option.value = value;
-  option.min = min;
-  option.max = max;
-  option.increment = increment;
+  SliderOption<int> option{ value, min, max, increment };
   auto slider = Make<SliderBase<int>>(option);
+
   return Make<SliderWithLabel>(std::move(label), slider);
 }
 
@@ -286,12 +283,9 @@ Component Slider(ConstStringRef label,
                  ConstRef<float> min,
                  ConstRef<float> max,
                  ConstRef<float> increment) {
-  SliderOption<float> option;
-  option.value = value;
-  option.min = min;
-  option.max = max;
-  option.increment = increment;
+  SliderOption<float> option{ value, min, max, increment };
   auto slider = Make<SliderBase<float>>(option);
+  
   return Make<SliderWithLabel>(std::move(label), slider);
 }
 Component Slider(ConstStringRef label,
@@ -299,12 +293,9 @@ Component Slider(ConstStringRef label,
                  ConstRef<long> min,
                  ConstRef<long> max,
                  ConstRef<long> increment) {
-  SliderOption<long> option;
-  option.value = value;
-  option.min = min;
-  option.max = max;
-  option.increment = increment;
+  SliderOption<long> option{ value, min, max, increment };
   auto slider = Make<SliderBase<long>>(option);
+
   return Make<SliderWithLabel>(std::move(label), slider);
 }
 
