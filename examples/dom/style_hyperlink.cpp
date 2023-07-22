@@ -9,8 +9,8 @@ int main() {
   using namespace ftxui;
   auto document =  //
       hbox({
-          text("This text is "),
-          text("bold") | bold,
+          text("This text is an "),
+          text("hyperlink") | hyperlink("https://www.google.com"),
           text(". Do you like it?"),
       });
   auto screen = Screen::Create(Dimension::Full(), Dimension::Fit(document));

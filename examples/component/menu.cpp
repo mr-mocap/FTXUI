@@ -8,7 +8,7 @@
 #include "ftxui/component/component_options.hpp"   // for MenuOption
 #include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
 
-int main(int argc, const char* argv[]) {
+int main() {
   using namespace ftxui;
   auto screen = ScreenInteractive::TerminalOutput();
 
@@ -21,7 +21,7 @@ int main(int argc, const char* argv[]) {
 
   MenuOption option;
   option.on_enter = screen.ExitLoopClosure();
-  auto menu = Menu(&entries, &selected, &option);
+  auto menu = Menu(&entries, &selected, option);
 
   screen.Loop(menu);
 

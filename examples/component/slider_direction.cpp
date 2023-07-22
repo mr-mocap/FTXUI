@@ -13,7 +13,7 @@
 
 using namespace ftxui;
 
-int main(int argc, const char* argv[]) {
+int main() {
   auto screen = ScreenInteractive::TerminalOutput();
   std::array<int, 30> values;
   for (int i = 0; i < values.size(); ++i) {
@@ -21,7 +21,7 @@ int main(int argc, const char* argv[]) {
   }
 
   auto layout_horizontal = Container::Horizontal({});
-  for (int i = 0; i < values.size(); ++i) {
+  for (auto& value : values) {
     // In C++17:
     SliderOption<int> option;
     option.value = &values[i];

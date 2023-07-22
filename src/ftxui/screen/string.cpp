@@ -7,21 +7,16 @@
 
 #include "ftxui/screen/string.hpp"
 
-#include <stddef.h>  // for size_t
-#include <array>     // for array
-#include <cstdint>   // for uint32_t, uint8_t, uint16_t, int32_t
-#include <string>    // for string, basic_string, wstring
-#include <tuple>     // for _Swallow_assign, ignore
+#include <array>    // for array
+#include <cstddef>  // for size_t
+#include <cstdint>  // for uint32_t, uint8_t, uint16_t, int32_t
+#include <string>   // for string, basic_string, wstring
+#include <tuple>    // for _Swallow_assign, ignore
 
 #include "ftxui/screen/deprecated.hpp"       // for wchar_width, wstring_width
 #include "ftxui/screen/string_internal.hpp"  // for WordBreakProperty, EatCodePoint, CodepointToWordBreakProperty, GlyphCount, GlyphIterate, GlyphNext, GlyphPrevious, IsCombining, IsControl, IsFullWidth, Utf8ToWordBreakProperty
 
 namespace {
-
-using ftxui::EatCodePoint;
-using ftxui::IsCombining;
-using ftxui::IsControl;
-using ftxui::IsFullWidth;
 
 struct Interval {
   uint32_t first;
@@ -1373,7 +1368,7 @@ const std::array<WordBreakPropertyInterval, 1288> g_word_break_intervals = {{
 
 // Find a codepoint inside a sorted list of Interval.
 template <size_t N>
-bool Bisearch(uint32_t ucs, const std::array<Interval, N> table) {
+bool Bisearch(uint32_t ucs, const std::array<Interval, N>& table) {
   if (ucs < table.front().first || ucs > table.back().last) {  // NOLINT
     return false;
   }
@@ -1396,7 +1391,7 @@ bool Bisearch(uint32_t ucs, const std::array<Interval, N> table) {
 
 // Find a value inside a sorted list of Interval + property.
 template <class C, size_t N>
-bool Bisearch(uint32_t ucs, const std::array<C, N> table, C* out) {
+bool Bisearch(uint32_t ucs, const std::array<C, N>& table, C* out) {
   if (ucs < table.front().first || ucs > table.back().last) {  // NOLINT
     return false;
   }
@@ -1565,8 +1560,9 @@ bool IsControl(uint32_t ucs) {
   if (ucs == 0) {
     return true;
   }
-  if (ucs < 32) {      // NOLINT
-    return ucs != 10;  // 10 => Line feed.
+  if (ucs < 32) {  // NOLINT
+    const uint32_t LINE_FEED = 10;
+    return ucs != LINE_FEED;
   }
   if (ucs >= 0x7f && ucs < 0xa0) {  // NOLINT
     return true;

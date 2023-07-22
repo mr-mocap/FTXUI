@@ -98,6 +98,7 @@ class VerticalContainer : public ContainerBase {
 
   Element Render() override {
     Elements elements;
+    elements.reserve(children_.size());
     for (auto& it : children_) {
       elements.push_back(it->Render());
     }
@@ -180,6 +181,7 @@ class HorizontalContainer : public ContainerBase {
 
   Element Render() override {
     Elements elements;
+    elements.reserve(children_.size());
     for (auto& it : children_) {
       elements.push_back(it->Render());
     }
@@ -230,6 +232,63 @@ class TabContainer : public ContainerBase {
 
   bool OnMouseEvent(Event event) override {
     return ActiveChild() && ActiveChild()->OnEvent(event);
+  }
+};
+
+class StackedContainer : public ContainerBase {
+ public:
+  StackedContainer(Components children)
+      : ContainerBase(std::move(children), nullptr) {}
+
+ private:
+  Element Render() final {
+    Elements elements;
+    for (auto& child : children_) {
+      elements.push_back(child->Render());
+    }
+    // Reverse the order of the elements.
+    std::reverse(elements.begin(), elements.end());
+    return dbox(std::move(elements));
+  }
+
+  bool Focusable() const final {
+    for (auto& child : children_) {
+      if (child->Focusable()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Component ActiveChild() final {
+    if (children_.size() == 0)
+      return nullptr;
+    return children_[0];
+  }
+
+  void SetActiveChild(ComponentBase* child) final {
+    if (children_.size() == 0) {
+      return;
+    }
+
+    // Find `child` and put it at the beginning without change the order of the
+    // other children.
+    auto it =
+        std::find_if(children_.begin(), children_.end(),
+                     [child](const Component& c) { return c.get() == child; });
+    if (it == children_.end()) {
+      return;
+    }
+    std::rotate(children_.begin(), it, it + 1);
+  }
+
+  bool OnEvent(Event event) final {
+    for (auto& child : children_) {
+      if (child->OnEvent(event)) {
+        return true;
+      }
+    }
+    return false;
   }
 };
 
@@ -341,6 +400,33 @@ Component Horizontal(Components children, int* selector) {
 /// ```
 Component Tab(Components children, int* selector) {
   return std::make_shared<TabContainer>(std::move(children), selector);
+}
+
+/// @brief A list of components to be stacked on top of each other.
+/// Events are propagated to the first component, then the second if not
+/// handled, etc.
+/// The components are drawn in the reverse order they are given.
+/// When a component take focus, it is put at the front, without changing the
+/// relative order of the other elements.
+///
+/// This should be used with the `Window` component.
+///
+/// @param children The list of components.
+/// @ingroup component
+/// @see Window
+///
+/// ### Example
+///
+/// ```cpp
+/// auto container = Container::Stacked({
+///   children_1,
+///   children_2,
+///   children_3,
+///   children_4,
+/// });
+/// ```
+Component Stacked(Components children) {
+  return std::make_shared<StackedContainer>(std::move(children));
 }
 
 }  // namespace Container

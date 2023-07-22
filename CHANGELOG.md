@@ -9,12 +9,38 @@ current (development)
 - Breaking: GaugeDirection enum is renamed Direction
 - Breaking: Direction enum is renamed WidthOrHeight
 - Breaking: Remove `ComponentBase` copy constructor/assignment.
+- Breaking: MenuOption::entries is renamed MenuOption::entries_option.
+- Breaking: Ref<XxxOption> becomes XxxOption in component constructors.
 - Feature: `ResizeableSplit` now support arbitrary element as a separator.
 - Feature: `input` is now supporting multiple lines.
 - Feature: `input` style is now customizeable.
+- Bugfix: Support F1-F5 from OS terminal.
+- Feature: Add struct based constructor:
+  ```cpp
+  Component Button(ButtonOption options);
+  Component Checkbox(CheckboxOption options);
+  Component Input(InputOption options);
+  Component Menu(MenuOption options);
+  Component MenuEntry(MenuEntryOption options);
+  Component Radiobox(RadioboxOption options);
+  Component Slider(SliderOption<T> options);
+  Component ResizableSplit(ResizableSplitOption options);
+  ```
+
+### Dom
+- Feature: Add `hyperlink` decorator. For instance:
+  ```cpp
+  auto link = text("Click here") | hyperlink("https://github.com/FTXUI")
+  ```
+  See the [OSC 8 page](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda).
+  FTXUI support proposed by @aaleino in [#662](https://github.com/ArthurSonzogni/FTXUI/issues/662).
+
 
 ### Build
 - Check version compatibility when using cmake find_package()
+- Add `FTXUI_DEV_WARNING` options to turn on warnings when building FTXUI
+- Turn OFF by default `FTXUI_BUILD_DOCS`
+- Turn OFF by default `FTXUI_BUILD_EXAMPLE`
 
 4.1.1
 -----

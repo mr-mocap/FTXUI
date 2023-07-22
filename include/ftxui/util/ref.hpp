@@ -77,6 +77,12 @@ class StringRef {
   StringRef(std::string ref) : owned_(std::move(ref)) {}
   StringRef(const wchar_t* ref) : StringRef(to_string(std::wstring(ref))) {}
   StringRef(const char* ref) : StringRef(std::string(ref)) {}
+  StringRef(const StringRef& t) : owned_(t.owned_), address_(t.address_) {}
+  StringRef& operator=(const StringRef& t) {
+    owned_ = t.owned_;
+    address_ = t.address_;
+    return *this;
+  }
   std::string& operator*() { return address_ ? *address_ : owned_; }
   std::string& operator()() { return address_ ? *address_ : owned_; }
   std::string* operator->() { return address_ ? address_ : &owned_; }
@@ -97,6 +103,18 @@ class ConstStringRef {
   ConstStringRef(const wchar_t* ref) : ConstStringRef(std::wstring(ref)) {}
   ConstStringRef(const char* ref)
       : ConstStringRef(to_wstring(std::string(ref))) {}
+  ConstStringRef(const ConstStringRef& t)
+      : owned_(t.owned_), address_(t.address_) {}
+  ConstStringRef& operator=(const ConstStringRef& t) {
+    owned_ = t.owned_;
+    address_ = t.address_;
+    return *this;
+  }
+  ConstStringRef& operator=(ConstStringRef&& t) {
+    owned_ = std::move(t.owned_);
+    address_ = t.address_;
+    return *this;
+  }
   const std::string& operator()() const {
     return address_ ? *address_ : owned_;
   }
@@ -106,19 +124,35 @@ class ConstStringRef {
   }
 
  private:
-  const std::string owned_;
+  std::string owned_;
   const std::string* address_ = nullptr;
 };
 
 /// @brief An adapter. Reference a list of strings.
 class ConstStringListRef {
  public:
+  ConstStringListRef() = default;
   ConstStringListRef(const std::vector<std::string>* ref) : ref_(ref) {}
   ConstStringListRef(const std::vector<std::wstring>* ref) : ref_wide_(ref) {}
 
-  size_t size() const { return ref_ ? ref_->size() : ref_wide_->size(); }
+  size_t size() const {
+    if (ref_) {
+      return ref_->size();
+    }
+    if (ref_wide_) {
+      return ref_wide_->size();
+    }
+    return 0;
+  }
+
   std::string operator[](size_t i) const {
-    return ref_ ? (*ref_)[i] : to_string((*ref_wide_)[i]);
+    if (ref_) {
+      return (*ref_)[i];
+    }
+    if (ref_wide_) {
+      return to_string((*ref_wide_)[i]);
+    }
+    return "";
   }
 
  private:

@@ -1,4 +1,5 @@
-#include <algorithm>                              // for max, min
+#include <algorithm>  // for max, min
+#include <cstdint>    // for uint8_t, uint16_t, uint32_t, uint64_t
 #include <ftxui/component/component_options.hpp>  // for SliderOption
 #include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
 #include <string>                   // for allocator
@@ -35,24 +36,24 @@ Decorator flexDirection(Direction direction) {
 template <class T>
 class SliderBase : public ComponentBase {
  public:
-  explicit SliderBase(Ref<SliderOption<T>> options)
-      : value_(options->value),
-        min_(options->min),
-        max_(options->max),
-        increment_(options->increment),
+  explicit SliderBase(SliderOption<T> options)
+      : value_(options.value),
+        min_(options.min),
+        max_(options.max),
+        increment_(options.increment),
         options_(options) {}
 
   Element Render() override {
-    auto gauge_color = Focused() ? color(options_->color_active)
-                                 : color(options_->color_inactive);
+    auto gauge_color = Focused() ? color(options_.color_active)
+                                 : color(options_.color_inactive);
     const float percent = float(value_() - min_()) / float(max_() - min_());
-    return gaugeDirection(percent, options_->direction) |
-           flexDirection(options_->direction) | reflect(gauge_box_) |
+    return gaugeDirection(percent, options_.direction) |
+           flexDirection(options_.direction) | reflect(gauge_box_) |
            gauge_color;
   }
 
   void OnLeft() {
-    switch (options_->direction) {
+    switch (options_.direction) {
       case Direction::Right:
         value_() -= increment_();
         break;
@@ -66,7 +67,7 @@ class SliderBase : public ComponentBase {
   }
 
   void OnRight() {
-    switch (options_->direction) {
+    switch (options_.direction) {
       case Direction::Right:
         value_() += increment_();
         break;
@@ -80,7 +81,7 @@ class SliderBase : public ComponentBase {
   }
 
   void OnUp() {
-    switch (options_->direction) {
+    switch (options_.direction) {
       case Direction::Up:
         value_() -= increment_();
         break;
@@ -94,7 +95,7 @@ class SliderBase : public ComponentBase {
   }
 
   void OnDown() {
-    switch (options_->direction) {
+    switch (options_.direction) {
       case Direction::Down:
         value_() -= increment_();
         break;
@@ -135,25 +136,13 @@ class SliderBase : public ComponentBase {
   }
 
   bool OnMouseEvent(Event event) {
-    if (captured_mouse_ && event.mouse().motion == Mouse::Released) {
-      captured_mouse_ = nullptr;
-      return true;
-    }
-
-    if (gauge_box_.Contain(event.mouse().x, event.mouse().y) &&
-        CaptureMouse(event)) {
-      TakeFocus();
-    }
-
-    if (event.mouse().button == Mouse::Left &&
-        event.mouse().motion == Mouse::Pressed &&
-        gauge_box_.Contain(event.mouse().x, event.mouse().y) &&
-        !captured_mouse_) {
-      captured_mouse_ = CaptureMouse(event);
-    }
-
     if (captured_mouse_) {
-      switch (options_->direction) {
+      if (event.mouse().motion == Mouse::Released) {
+        captured_mouse_ = nullptr;
+        return true;
+      }
+
+      switch (options_.direction) {
         case Direction::Right: {
           value_() = min_() + (event.mouse().x - gauge_box_.x_min) *
                                   (max_() - min_()) /
@@ -182,6 +171,23 @@ class SliderBase : public ComponentBase {
       value_() = std::max(min_(), std::min(max_(), value_()));
       return true;
     }
+
+    if (event.mouse().button != Mouse::Left ||
+        event.mouse().motion != Mouse::Pressed) {
+      return false;
+    }
+
+    if (!gauge_box_.Contain(event.mouse().x, event.mouse().y)) {
+      return false;
+    }
+
+    captured_mouse_ = CaptureMouse(event);
+
+    if (captured_mouse_) {
+      TakeFocus();
+      return true;
+    }
+
     return false;
   }
 
@@ -192,15 +198,14 @@ class SliderBase : public ComponentBase {
   ConstRef<T> min_;
   ConstRef<T> max_;
   ConstRef<T> increment_;
-  Ref<SliderOption<T>> options_;
+  SliderOption<T> options_;
   Box gauge_box_;
   CapturedMouse captured_mouse_;
 };
 
 class SliderWithLabel : public ComponentBase {
  public:
-  SliderWithLabel(ConstStringRef label, Component inner)
-      : label_(std::move(label)) {
+  SliderWithLabel(ConstStringRef label, Component inner) : label_(label) {
     Add(std::move(inner));
     SetActiveChild(ChildAt(0));
   }
@@ -215,7 +220,9 @@ class SliderWithLabel : public ComponentBase {
       return false;
     }
 
-    if (!box_.Contain(event.mouse().x, event.mouse().y)) {
+    mouse_hover_ = box_.Contain(event.mouse().x, event.mouse().y);
+
+    if (!mouse_hover_) {
       return false;
     }
 
@@ -223,13 +230,13 @@ class SliderWithLabel : public ComponentBase {
       return false;
     }
 
-    TakeFocus();
     return true;
   }
 
   Element Render() override {
     auto focus_management = Focused() ? focus : Active() ? select : nothing;
-    auto gauge_color = Focused() ? color(Color::White) : color(Color::GrayDark);
+    auto gauge_color = (Focused() || mouse_hover_) ? color(Color::White)
+                                                   : color(Color::GrayDark);
     return hbox({
                text(label_()) | dim | vcenter,
                hbox({
@@ -243,6 +250,7 @@ class SliderWithLabel : public ComponentBase {
 
   ConstStringRef label_;
   Box box_;
+  bool mouse_hover_ = false;
 };
 
 /// @brief An horizontal slider.

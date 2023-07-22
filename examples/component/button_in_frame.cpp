@@ -11,17 +11,16 @@
 
 using namespace ftxui;
 
-int main(int argc, const char* argv[]) {
+int main() {
   int counter = 0;
   auto on_click = [&] { counter++; };
 
-  auto button_style = ButtonOption::Animated(Color::Default, Color::GrayDark,
-                                             Color::Default, Color::White);
+  auto style = ButtonOption::Animated(Color::Default, Color::GrayDark,
+                                      Color::Default, Color::White);
 
   auto container = Container::Vertical({});
   for (int i = 0; i < 30; ++i) {
-    auto button =
-        Button("Button " + std::to_string(i), on_click, &button_style);
+    auto button = Button("Button " + std::to_string(i), on_click, style);
     container->Add(button);
   }
 
