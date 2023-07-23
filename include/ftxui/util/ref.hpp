@@ -29,14 +29,14 @@ class ConstRef {
                                                                                    : &std::get<const T >(variant_);
   }
  private:
-  std::variant<const T*, const T> variant_ = nullptr;
+  std::variant<const T, const T *> variant_ = T{};
 };
 
 /// @brief An adapter. Own or reference an mutable object.
 template <typename T>
 class Ref {
  public:
-  Ref() {}
+  Ref() = default;
   Ref(const T& t) : variant_(t) {}
   Ref(T&& t) : variant_(std::forward<T>(t)) {}
   Ref(T* t) : variant_(t) {}
@@ -66,7 +66,7 @@ class Ref {
                                                :  std::get<T *>(variant_);
   }
  private:
-  std::variant<T *, T> variant_;
+  std::variant<T, T *> variant_ = T{};
 };
 
 /// @brief An adapter. Own or reference a constant string. For convenience, this
