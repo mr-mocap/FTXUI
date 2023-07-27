@@ -15,21 +15,25 @@ class ConstRef {
   ConstRef(const T &t) : variant_(t) {}
   ConstRef(const T *t) : variant_(t) {}
 
-  ConstRef(ConstRef<T> &&) = delete;
+  ConstRef(ConstRef<T> &&) = default;
   ConstRef(const ConstRef<T> &) = default;
-  ConstRef<T>& operator=(ConstRef<T>&) = delete;
 
-  const T& operator*() const { return std::holds_alternative<const T>(variant_) ?  std::get<const T>(variant_)
-                                                                                : *std::get<const T *>(variant_);
-  }
-  const T& operator()() const { return std::holds_alternative<const T>(variant_) ? std::get<const T>(variant_)
-                                                                                : *std::get<const T *>(variant_);
-  }
-  const T* operator->() const { return std::holds_alternative<const T *>(variant_) ?  std::get<const T *>(variant_)
-                                                                                   : &std::get<const T >(variant_);
-  }
+  // Make a "reseatable" reference
+  ConstRef<T>& operator=(const ConstRef<T>&) = default;
+  ConstRef<T>& operator=(ConstRef<T> &&) = default;
+
+  const T& operator*() const { return getReference(); }
+  const T& operator()() const { return getReference(); }
+  const T* operator->() const { return getPointer(); }
  private:
-  std::variant<const T, const T *> variant_ = T{};
+  std::variant<T, const T *> variant_ = T{};
+
+  const T &getReference() const { return *getPointer(); }
+  const T *getPointer() const
+  {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               :  std::get<const T *>(variant_);
+  }
 };
 
 /// @brief An adapter. Own or reference an mutable object.
@@ -40,92 +44,54 @@ class Ref {
   Ref(const T& t) : variant_(t) {}
   Ref(T&& t) : variant_(std::forward<T>(t)) {}
   Ref(T* t) : variant_(t) {}
-  T& operator*() {
-    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
-                                               : *std::get<T *>(variant_);
-  }
-  T& operator()() {
-    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
-                                               : *std::get<T *>(variant_);
-  }
-  T* operator->() {
-    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
-                                               :  std::get<T *>(variant_);
-  }
 
-  const T& operator*() const {
-    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
-                                               : *std::get<T *>(variant_);
-  }
-  const T& operator()() const {
-    return std::holds_alternative<T>(variant_) ?  std::get<T>(variant_)
-                                               : *std::get<T *>(variant_);
-  }
-  const T* operator->() const {
-    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
-                                               :  std::get<T *>(variant_);
-  }
+  T& operator*() { return getReference(); }
+  T& operator()() { return getReference(); }
+  T* operator->() { return getPointer(); }
+
+  const T& operator*() const { return getReference(); }
+  const T& operator()() const { return getReference(); }
+  const T* operator->() const { return getPointer(); }
  private:
   std::variant<T, T *> variant_ = T{};
+
+  const T &getReference() const { return *getPointer(); }
+        T &getReference()       { return *getPointer(); }
+
+  const T *getPointer() const
+  {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               :  std::get<T *>(variant_);
+  }
+  T *getPointer()
+  {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               :  std::get<T *>(variant_);
+  }
 };
 
 /// @brief An adapter. Own or reference a constant string. For convenience, this
 /// class convert multiple mutable string toward a shared representation.
-class StringRef {
+class StringRef : public Ref<std::string> {
  public:
-  StringRef(std::string* ref) : address_(ref) {}
-  StringRef(std::string ref) : owned_(std::move(ref)) {}
+  using Ref<std::string>::Ref;
+
   StringRef(const wchar_t* ref) : StringRef(to_string(std::wstring(ref))) {}
   StringRef(const char* ref) : StringRef(std::string(ref)) {}
-  StringRef(const StringRef& t) : owned_(t.owned_), address_(t.address_) {}
-  StringRef& operator=(const StringRef& t) {
-    owned_ = t.owned_;
-    address_ = t.address_;
-    return *this;
-  }
-  std::string& operator*() { return address_ ? *address_ : owned_; }
-  std::string& operator()() { return address_ ? *address_ : owned_; }
-  std::string* operator->() { return address_ ? address_ : &owned_; }
-
- private:
-  std::string owned_;
-  std::string* address_ = nullptr;
 };
 
 /// @brief An adapter. Own or reference a constant string. For convenience, this
 /// class convert multiple immutable string toward a shared representation.
-class ConstStringRef {
+class ConstStringRef : public ConstRef<std::string> {
  public:
-  ConstStringRef(const std::string* ref) : address_(ref) {}
-  ConstStringRef(const std::wstring* ref) : ConstStringRef(to_string(*ref)) {}
-  ConstStringRef(std::string ref) : owned_(std::move(ref)) {}
-  ConstStringRef(std::wstring ref) : ConstStringRef(to_string(ref)) {}
-  ConstStringRef(const wchar_t* ref) : ConstStringRef(std::wstring(ref)) {}
-  ConstStringRef(const char* ref)
-      : ConstStringRef(to_wstring(std::string(ref))) {}
-  ConstStringRef(const ConstStringRef& t)
-      : owned_(t.owned_), address_(t.address_) {}
-  ConstStringRef& operator=(const ConstStringRef& t) {
-    owned_ = t.owned_;
-    address_ = t.address_;
-    return *this;
-  }
-  ConstStringRef& operator=(ConstStringRef&& t) {
-    owned_ = std::move(t.owned_);
-    address_ = t.address_;
-    return *this;
-  }
-  const std::string& operator()() const {
-    return address_ ? *address_ : owned_;
-  }
-  const std::string& operator*() const { return address_ ? *address_ : owned_; }
-  const std::string* operator->() const {
-    return address_ ? address_ : &owned_;
-  }
+  using ConstRef<std::string>::ConstRef;
 
- private:
-  std::string owned_;
-  const std::string* address_ = nullptr;
+  ConstStringRef(const std::wstring* ref) : ConstStringRef( to_string(*ref) ) {}
+  ConstStringRef(const std::wstring  ref) : ConstStringRef( to_string(ref) ) {}
+  ConstStringRef(const wchar_t* ref) : ConstStringRef( to_string(std::wstring(ref)) ) {}
+  ConstStringRef(const char* ref) : ConstStringRef( std::string(ref) ) {}
+
+  ConstStringRef& operator=(const ConstStringRef&) = default;
 };
 
 /// @brief An adapter. Reference a list of strings.

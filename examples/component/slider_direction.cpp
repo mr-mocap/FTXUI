@@ -24,7 +24,7 @@ int main() {
   for (auto& value : values) {
     // In C++17:
     SliderOption<int> option;
-    option.value = &values[i];
+    option.value = &value;
     option.direction = Direction::Up;
     layout_horizontal->Add(Slider<int>(option));
 

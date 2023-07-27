@@ -581,7 +581,7 @@ Component Toggle(ConstStringListRef entries, int* selected) {
 ///   entry 3
 /// ```
 Component MenuEntry(ConstStringRef label, MenuEntryOption option) {
-  option.label = label;
+  option.label = std::move(label);
   return MenuEntry(std::move(option));
 }
 

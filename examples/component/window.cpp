@@ -29,30 +29,57 @@ int main() {
   int window_1_height = 20;
 
   auto window_1 = Window({
+#if __cplusplus >= 202002L
       .inner = DummyWindowContent(),
       .title = "First window",
       .left = &window_1_left,
       .top = &window_1_top,
       .width = &window_1_width,
       .height = &window_1_height,
+#else
+      DummyWindowContent(),
+      "First window",
+      &window_1_left,
+      &window_1_top,
+      &window_1_width,
+      &window_1_height,
+#endif
   });
 
   auto window_2 = Window({
+#if __cplusplus >= 202002L
       .inner = DummyWindowContent(),
       .title = "My window",
       .left = 40,
       .top = 20,
+#else
+      DummyWindowContent(),
+      "My window",
+      40,
+      20
+#endif
   });
 
   auto window_3 = Window({
+#if __cplusplus >= 202002L
       .inner = DummyWindowContent(),
       .title = "My window",
       .left = 60,
       .top = 30,
+#else
+      DummyWindowContent(),
+      "My window",
+      60,
+      30
+#endif
   });
 
   auto window_4 = Window({
+#if __cplusplus >= 202002L
       .inner = DummyWindowContent(),
+#else
+      DummyWindowContent()
+#endif
   });
 
   auto window_5 = Window({});

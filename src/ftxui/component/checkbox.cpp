@@ -107,9 +107,9 @@ class CheckboxBase : public ComponentBase, public CheckboxOption {
 /// ```
 // NOLINTNEXTLINE
 Component Checkbox(ConstStringRef label, bool* checked, CheckboxOption option) {
-  option.label = label;
+  option.label = std::move(label);
   option.checked = checked;
-  return Make<CheckboxBase>(std::move(option));
+  return Make<CheckboxBase>( std::move(option) );
 }
 
 }  // namespace ftxui
