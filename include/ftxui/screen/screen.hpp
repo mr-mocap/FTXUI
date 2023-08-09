@@ -1,8 +1,9 @@
 #ifndef FTXUI_SCREEN_SCREEN_HPP
 #define FTXUI_SCREEN_SCREEN_HPP
 
+#include <cstdint>  // for uint8_t
 #include <memory>
-#include <string>  // for string, allocator, basic_string
+#include <string>  // for string, basic_string, allocator
 #include <vector>  // for vector
 
 #include "ftxui/screen/box.hpp"       // for Box
@@ -14,15 +15,15 @@ namespace ftxui {
 /// @brief A unicode character and its associated style.
 /// @ingroup screen
 struct Pixel {
-  bool operator==(const Pixel& other) const;
-
-  // The graphemes stored into the pixel. To support combining characters,
-  // like: a⃦, this can potentially contains multiple codepoitns.
-  std::string character = " ";
-
-  // Colors:
-  Color background_color = Color::Default;
-  Color foreground_color = Color::Default;
+  Pixel()
+      : blink(false),
+        bold(false),
+        dim(false),
+        inverted(false),
+        underlined(false),
+        underlined_double(false),
+        strikethrough(false),
+        automerge(false) {}
 
   // A bit field representing the style:
   bool blink : 1;
@@ -34,15 +35,17 @@ struct Pixel {
   bool strikethrough : 1;
   bool automerge : 1;
 
-  Pixel()
-      : blink(false),
-        bold(false),
-        dim(false),
-        inverted(false),
-        underlined(false),
-        underlined_double(false),
-        strikethrough(false),
-        automerge(false) {}
+  // The hyperlink associated with the pixel.
+  // 0 is the default value, meaning no hyperlink.
+  uint8_t hyperlink = 0;
+
+  // The graphemes stored into the pixel. To support combining characters,
+  // like: a⃦, this can potentially contain multiple codepoints.
+  std::string character = " ";
+
+  // Colors:
+  Color background_color = Color::Default;
+  Color foreground_color = Color::Default;
 };
 
 /// @brief Define how the Screen's dimensions should look like.
@@ -61,13 +64,18 @@ class Screen {
   static Screen Create(Dimensions dimension);
   static Screen Create(Dimensions width, Dimensions height);
 
-  // Node write into the screen using Screen::at.
+  // Access a character in the grid at a given position.
   std::string& at(int x, int y);
-  Pixel& PixelAt(int x, int y);
+  const std::string& at(int x, int y) const;
 
-  // Convert the screen into a printable string in the terminal.
-  std::string ToString();
-  void Print();
+  // Access a cell (Pixel) in the grid at a given position.
+  Pixel& PixelAt(int x, int y);
+  const Pixel& PixelAt(int x, int y) const;
+
+  std::string ToString() const;
+
+  // Print the Screen on to the terminal.
+  void Print() const;
 
   // Get screen dimensions.
   int dimx() const { return dimx_; }
@@ -76,7 +84,7 @@ class Screen {
   // Move the terminal cursor n-lines up with n = dimy().
   std::string ResetPosition(bool clear = false) const;
 
-  // Fill with space.
+  // Fill the screen with space.
   void Clear();
 
   void ApplyShader();
@@ -99,6 +107,11 @@ class Screen {
   Cursor cursor() const { return cursor_; }
   void SetCursor(Cursor cursor) { cursor_ = cursor; }
 
+  // Store an hyperlink in the screen. Return the id of the hyperlink. The id is
+  // used to identify the hyperlink when the user click on it.
+  uint8_t RegisterHyperlink(const std::string& link);
+  const std::string& Hyperlink(uint8_t id) const;
+
   Box stencil;
 
  protected:
@@ -106,6 +119,7 @@ class Screen {
   int dimy_;
   std::vector<std::vector<Pixel>> pixels_;
   Cursor cursor_;
+  std::vector<std::string> hyperlinks_ = {""};
 };
 
 }  // namespace ftxui

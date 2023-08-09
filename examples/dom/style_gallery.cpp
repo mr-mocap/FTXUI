@@ -5,7 +5,7 @@
 #include "ftxui/dom/node.hpp"      // for Render
 #include "ftxui/screen/color.hpp"  // for Color, Color::Blue, ftxui
 
-int main(int argc, const char* argv[]) {
+int main() {
   using namespace ftxui;
   // clang-format off
   auto document =
@@ -19,7 +19,8 @@ int main(int argc, const char* argv[]) {
       text("blink")              | blink                , text(" ") ,
       text("strikethrough")      | strikethrough        , text(" ") ,
       text("color")              | color(Color::Blue)   , text(" ") ,
-      text("bgcolor")            | bgcolor(Color::Blue) ,
+      text("bgcolor")            | bgcolor(Color::Blue) , text(" ") ,
+      text("hyperlink")          | hyperlink("https://github.com/ArthurSonzogni/FTXUI"),
     });
   // clang-format on
   auto screen = Screen::Create(Dimension::Full(), Dimension::Fit(document));

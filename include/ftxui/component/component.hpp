@@ -40,37 +40,43 @@ Component Vertical(Components children, int* selector);
 Component Horizontal(Components children);
 Component Horizontal(Components children, int* selector);
 Component Tab(Components children, int* selector);
-
+Component Stacked(Components children);
 }  // namespace Container
 
+Component Button(ButtonOption options);
 Component Button(ConstStringRef label,
                  std::function<void()> on_click,
-                 Ref<ButtonOption> = ButtonOption::Simple());
+                 ButtonOption options = ButtonOption::Simple());
 
+Component Checkbox(CheckboxOption options);
 Component Checkbox(ConstStringRef label,
                    bool* checked,
-                   Ref<CheckboxOption> option = CheckboxOption::Simple());
+                   CheckboxOption options = CheckboxOption::Simple());
 
-Component Input(StringRef content, Ref<InputOption> option = {});
+Component Input(InputOption options = {});
+Component Input(StringRef content, InputOption options = {});
 Component Input(StringRef content,
                 StringRef placeholder,
-                Ref<InputOption> option = {});
+                InputOption options = {});
 
+Component Menu(MenuOption options);
 Component Menu(ConstStringListRef entries,
                int* selected_,
-               Ref<MenuOption> = MenuOption::Vertical());
-Component MenuEntry(ConstStringRef label, Ref<MenuEntryOption> = {});
+               MenuOption options = MenuOption::Vertical());
+Component MenuEntry(MenuEntryOption options);
+Component MenuEntry(ConstStringRef label, MenuEntryOption options = {});
 
-Component Dropdown(ConstStringListRef entries, int* selected);
-
+Component Radiobox(RadioboxOption options);
 Component Radiobox(ConstStringListRef entries,
                    int* selected_,
-                   Ref<RadioboxOption> option = {});
+                   RadioboxOption options = {});
+
+Component Dropdown(ConstStringListRef entries, int* selected);
 Component Toggle(ConstStringListRef entries, int* selected);
 
 // General slider constructor:
 template <typename T>
-Component Slider(SliderOption<T> options = {});
+Component Slider(SliderOption<T> options);
 
 // Shorthand without the `SliderOption` constructor:
 Component Slider(ConstStringRef label,
@@ -89,11 +95,11 @@ Component Slider(ConstStringRef label,
                  ConstRef<long> max = 100l,
                  ConstRef<long> increment = 5l);
 
+Component ResizableSplit(ResizableSplitOption options);
 Component ResizableSplitLeft(Component main, Component back, int* main_size);
 Component ResizableSplitRight(Component main, Component back, int* main_size);
 Component ResizableSplitTop(Component main, Component back, int* main_size);
 Component ResizableSplitBottom(Component main, Component back, int* main_size);
-Component ResizableSplit(ResizableSplitOption options);
 
 Component Renderer(Component child, std::function<Element()>);
 Component Renderer(std::function<Element()>);
@@ -125,6 +131,8 @@ ComponentDecorator Hoverable(bool* hover);
 ComponentDecorator Hoverable(std::function<void()> on_enter,
                              std::function<void()> on_leave);
 ComponentDecorator Hoverable(std::function<void(bool)> on_change);
+
+Component Window(WindowOptions option);
 
 }  // namespace ftxui
 

@@ -1,6 +1,9 @@
 ---
 Checks: "*,
+        -*-macro-usage,
+        -*-magic-numbers,
         -*-narrowing-conversions
+        -*-unnecessary-value-param,
         -*-uppercase-literal-suffix,
         -abseil-*,
         -altera-*,
@@ -9,6 +12,7 @@ Checks: "*,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -fuchsia-*,
         -google-*,
+        -hicpp-signed-bitwise,
         -llvm*,
         -misc-no-recursion,
         -misc-non-private-member-variables-in-classes,
@@ -19,7 +23,9 @@ Checks: "*,
         -readability-identifier-length,
         -readability-implicit-bool-conversion,
         -readability-non-const-parameter,
+        -readability-simplify-boolean-expr,
         -readability-static-accessed-through-instance,
+        -readability-use-anyofallof,
         -zircon-*,
 "
 WarningsAsErrors: ''

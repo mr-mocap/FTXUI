@@ -36,6 +36,7 @@ add_executable(ftxui-tests
   src/ftxui/dom/gauge_test.cpp
   src/ftxui/dom/gridbox_test.cpp
   src/ftxui/dom/hbox_test.cpp
+  src/ftxui/dom/hyperlink_test.cpp
   src/ftxui/dom/linear_gradient_test.cpp
   src/ftxui/dom/scroll_indicator_test.cpp
   src/ftxui/dom/separator_test.cpp
@@ -68,4 +69,6 @@ gtest_discover_tests(ftxui-tests
   DISCOVERY_TIMEOUT 600
 )
 
-set(CMAKE_CTEST_ARGUMENTS "--rerun-failed --output-on-failure")
+#set(CMAKE_CTEST_ARGUMENTS "--rerun-failed --output-on-failure")
+#set_tests_properties(gen_init_queries PROPERTIES FIXTURES_SETUP f_init_queries)
+#set_tests_properties(test PROPERTIES  FIXTURES_REQUIRED f_init_queries)

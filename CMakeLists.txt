@@ -6,8 +6,9 @@ project(ftxui
   DESCRIPTION "C++ Functional Terminal User Interface."
 )
 
-option(FTXUI_BUILD_DOCS "Set to ON to build docs" ON)
-option(FTXUI_BUILD_EXAMPLES "Set to ON to build examples" ON)
+option(FTXUI_QUIET "Set to ON for FTXUI to be quiet" OFF)
+option(FTXUI_BUILD_EXAMPLES "Set to ON to build examples" OFF)
+option(FTXUI_BUILD_DOCS "Set to ON to build docs" OFF)
 option(FTXUI_BUILD_TESTS "Set to ON to build tests" OFF)
 option(FTXUI_BUILD_TESTS_FUZZER "Set to ON to enable fuzzing" OFF)
 option(FTXUI_ENABLE_INSTALL "Generate the install target" ON)
@@ -26,6 +27,7 @@ else()
     ${FTXUI_MICROSOFT_TERMINAL_FALLBACK_HELP_TEXT} OFF)
 endif()
 
+include(cmake/ftxui_message.cmake)
 
 add_library(screen
   include/ftxui/screen/box.hpp
@@ -53,6 +55,7 @@ add_library(dom
   src/ftxui/dom/automerge.cpp
   src/ftxui/dom/blink.cpp
   src/ftxui/dom/bold.cpp
+  src/ftxui/dom/hyperlink.cpp
   src/ftxui/dom/border.cpp
   src/ftxui/dom/box_helper.cpp
   src/ftxui/dom/box_helper.hpp
@@ -129,6 +132,7 @@ add_library(component
   src/ftxui/component/terminal_input_parser.cpp
   src/ftxui/component/terminal_input_parser.hpp
   src/ftxui/component/util.cpp
+  src/ftxui/component/window.cpp
 )
 
 target_link_libraries(dom
