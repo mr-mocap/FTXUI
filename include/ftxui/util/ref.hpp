@@ -87,7 +87,7 @@ class ConstStringRef {
  public:
   ConstStringRef() = delete;
   ConstStringRef(const std::string &s) : variant_(s) {}
-  ConstStringRef(std::string *sp) : variant_( std::string_view{ *sp } ) {}
+  ConstStringRef(std::string *sp) : variant_(sp) {}
   ConstStringRef(std::string_view sv)  : variant_(sv) {}
   ConstStringRef(const char *string_in_code) : variant_( std::string_view{string_in_code} ) {}
 
@@ -101,12 +101,16 @@ class ConstStringRef {
   std::string operator*()  const { return std::string{ getStringView() }; }
   std::string operator()() const { return std::string{ getStringView() }; }
  private:
-  std::variant<std::string_view, std::string> variant_ = std::string_view{};
+  std::variant<std::string_view, std::string *, std::string> variant_ = std::string_view{};
 
   const std::string_view getStringView() const
   {
-    return std::holds_alternative<std::string>(variant_) ? std::get<std::string>(variant_)
-                                                         : std::get<std::string_view>(variant_);
+    if ( std::holds_alternative<std::string_view>(variant_) )
+      return std::get<std::string_view>(variant_);
+    else if ( std::holds_alternative<std::string *>(variant_) )
+      return *std::get<std::string *>(variant_);
+    else if ( std::holds_alternative<std::string>(variant_) )
+      return std::get<std::string>(variant_);
   }
 };
 
