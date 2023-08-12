@@ -3,7 +3,6 @@
 
 #include <ftxui/screen/string.hpp>
 #include <string>
-#include <string_view>
 #include <variant>
 
 namespace ftxui {
@@ -12,24 +11,25 @@ namespace ftxui {
 template <typename T>
 class ConstRef {
  public:
-  ConstRef() = delete;
-  ConstRef(const ConstRef<T> &) = default;
-  ConstRef(const T &t) : variant_(t) {}
-  ConstRef(const T *t) : variant_(t) {}
+  ConstRef() = default;
+  ConstRef(const ConstRef<T>&) = default;
+  ConstRef(const T& t) : variant_(t) {}
+  ConstRef(const T* t) : variant_(t) {}
 
-  // Make a "reseatable" reference
+  // Make a "resetable" reference
   ConstRef<T>& operator=(const ConstRef<T>&) = default;
 
-  const T& operator*()  const { return *Address(); }
+  // Accessors:
   const T& operator()() const { return *Address(); }
-  const T* operator->() const { return  Address(); }
- private:
-  std::variant<T, const T *> variant_ = T{};
+  const T& operator*() const { return *Address(); }
+  const T* operator->() const { return Address(); }
 
-  const T *Address() const
-  {
+ private:
+  std::variant<T, const T*> variant_ = T{};
+
+  const T* Address() const {
     return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
-                                               :  std::get<const T *>(variant_);
+                                               : std::get<const T*>(variant_);
   }
 };
 
@@ -38,24 +38,32 @@ template <typename T>
 class Ref {
  public:
   Ref() = default;
+  Ref(const Ref<T>&) = default;
   Ref(const T& t) : variant_(t) {}
   Ref(T&& t) : variant_(std::forward<T>(t)) {}
   Ref(T* t) : variant_(t) {}
 
-  T& operator*()  { return *Address(); }
+  // Make a "resetable" reference
+  Ref<T>& operator=(const Ref<T>&) = default;
+
+  // Accessors:
   T& operator()() { return *Address(); }
-  T* operator->() { return  Address(); }
-
-  const T& operator*()  const { return *Address(); }
+  T& operator*() { return *Address(); }
+  T* operator->() { return Address(); }
   const T& operator()() const { return *Address(); }
-  const T* operator->() const { return  Address(); }
- private:
-  std::variant<T, T *> variant_ = T{};
+  const T& operator*() const { return *Address(); }
+  const T* operator->() const { return Address(); }
 
-  T *Address()
-  {
+ private:
+  std::variant<T, T*> variant_ = T{};
+
+  const T* Address() const {
     return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
-                                               :  std::get<T *>(variant_);
+                                               : std::get<T*>(variant_);
+  }
+  T* Address() {
+    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
+                                               : std::get<T*>(variant_);
   }
 };
 
@@ -71,32 +79,17 @@ class StringRef : public Ref<std::string> {
 
 /// @brief An adapter. Own or reference a constant string. For convenience, this
 /// class convert multiple immutable string toward a shared representation.
-class ConstStringRef {
+class ConstStringRef : public ConstRef<std::string> {
  public:
-  ConstStringRef() = default;
-  ConstStringRef(const ConstStringRef &) = default;
-  ConstStringRef(const std::string &s) : variant_(s) {}
-  ConstStringRef(std::string *sp) : variant_(sp) {}
-  ConstStringRef(std::string_view sv)  : variant_(sv) {}
-  ConstStringRef(const char *string_in_code) : variant_( std::string_view{string_in_code} ) {}
+  using ConstRef<std::string>::ConstRef;
 
-  // Make a "reseatable" reference
-  ConstStringRef &operator=(const ConstStringRef &) = default;
+  ConstStringRef(const std::wstring* ref) : ConstStringRef(to_string(*ref)) {}
+  ConstStringRef(const std::wstring ref) : ConstStringRef(to_string(ref)) {}
+  ConstStringRef(const wchar_t* ref)
+      : ConstStringRef(to_string(std::wstring(ref))) {}
+  ConstStringRef(const char* ref) : ConstStringRef(std::string(ref)) {}
 
-  std::string operator*()  const { return std::string{ StringView() }; }
-  std::string operator()() const { return std::string{ StringView() }; }
- private:
-  std::variant<std::string_view, std::string *, std::string> variant_ = std::string_view{};
-
-  std::string_view StringView() const
-  {
-    if ( std::holds_alternative<std::string_view>(variant_) )
-      return std::get<std::string_view>(variant_);
-    else if ( std::holds_alternative<std::string *>(variant_) )
-      return *std::get<std::string *>(variant_);
-    else if ( std::holds_alternative<std::string>(variant_) )
-      return std::get<std::string>(variant_);
-  }
+  ConstStringRef& operator=(const ConstStringRef&) = default;
 };
 
 /// @brief An adapter. Reference a list of strings.
