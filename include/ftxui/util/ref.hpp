@@ -13,24 +13,20 @@ template <typename T>
 class ConstRef {
  public:
   ConstRef() = delete;
+  ConstRef(const ConstRef<T> &) = default;
   ConstRef(const T &t) : variant_(t) {}
   ConstRef(const T *t) : variant_(t) {}
 
-  ConstRef(ConstRef<T> &&) = default;
-  ConstRef(const ConstRef<T> &) = default;
-
   // Make a "reseatable" reference
   ConstRef<T>& operator=(const ConstRef<T>&) = default;
-  ConstRef<T>& operator=(ConstRef<T> &&) = default;
 
-  const T& operator*() const { return getReference(); }
-  const T& operator()() const { return getReference(); }
-  const T* operator->() const { return getPointer(); }
+  const T& operator*()  const { return *Address(); }
+  const T& operator()() const { return *Address(); }
+  const T* operator->() const { return  Address(); }
  private:
   std::variant<T, const T *> variant_ = T{};
 
-  const T &getReference() const { return *getPointer(); }
-  const T *getPointer() const
+  const T *Address() const
   {
     return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
                                                :  std::get<const T *>(variant_);
@@ -46,25 +42,17 @@ class Ref {
   Ref(T&& t) : variant_(std::forward<T>(t)) {}
   Ref(T* t) : variant_(t) {}
 
-  T& operator*() { return getReference(); }
-  T& operator()() { return getReference(); }
-  T* operator->() { return getPointer(); }
+  T& operator*()  { return *Address(); }
+  T& operator()() { return *Address(); }
+  T* operator->() { return  Address(); }
 
-  const T& operator*() const { return getReference(); }
-  const T& operator()() const { return getReference(); }
-  const T* operator->() const { return getPointer(); }
+  const T& operator*()  const { return *Address(); }
+  const T& operator()() const { return *Address(); }
+  const T* operator->() const { return  Address(); }
  private:
   std::variant<T, T *> variant_ = T{};
 
-  const T &getReference() const { return *getPointer(); }
-        T &getReference()       { return *getPointer(); }
-
-  const T *getPointer() const
-  {
-    return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
-                                               :  std::get<T *>(variant_);
-  }
-  T *getPointer()
+  T *Address()
   {
     return std::holds_alternative<T>(variant_) ? &std::get<T>(variant_)
                                                :  std::get<T *>(variant_);
@@ -85,25 +73,22 @@ class StringRef : public Ref<std::string> {
 /// class convert multiple immutable string toward a shared representation.
 class ConstStringRef {
  public:
-  ConstStringRef() = delete;
+  ConstStringRef() = default;
+  ConstStringRef(const ConstStringRef &) = default;
   ConstStringRef(const std::string &s) : variant_(s) {}
   ConstStringRef(std::string *sp) : variant_(sp) {}
   ConstStringRef(std::string_view sv)  : variant_(sv) {}
   ConstStringRef(const char *string_in_code) : variant_( std::string_view{string_in_code} ) {}
 
-  ConstStringRef(ConstStringRef &&) = default;
-  ConstStringRef(const ConstStringRef &) = default;
-
   // Make a "reseatable" reference
-  ConstStringRef &operator=(ConstStringRef &&) = default;
   ConstStringRef &operator=(const ConstStringRef &) = default;
 
-  std::string operator*()  const { return std::string{ getStringView() }; }
-  std::string operator()() const { return std::string{ getStringView() }; }
+  std::string operator*()  const { return std::string{ StringView() }; }
+  std::string operator()() const { return std::string{ StringView() }; }
  private:
   std::variant<std::string_view, std::string *, std::string> variant_ = std::string_view{};
 
-  const std::string_view getStringView() const
+  std::string_view StringView() const
   {
     if ( std::holds_alternative<std::string_view>(variant_) )
       return std::get<std::string_view>(variant_);
