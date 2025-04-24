@@ -1,9 +1,11 @@
+// Copyright 2021 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <ftxui/component/component_options.hpp>  // for ResizableSplitOption
 #include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
 #include <ftxui/util/ref.hpp>       // for Ref
 #include <functional>               // for function
-#include <memory>   // for __shared_ptr_access, shared_ptr, allocator
-#include <utility>  // for move
+#include <utility>                  // for move
 
 #include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
 #include "ftxui/component/component.hpp"  // for Horizontal, Make, ResizableSplit, ResizableSplitBottom, ResizableSplitLeft, ResizableSplitRight, ResizableSplitTop
@@ -20,10 +22,32 @@ class ResizableSplitBase : public ComponentBase {
  public:
   explicit ResizableSplitBase(ResizableSplitOption options)
       : options_(std::move(options)) {
-    Add(Container::Horizontal({
-        options_->main,
-        options_->back,
-    }));
+    switch (options_->direction()) {
+      case Direction::Left:
+        Add(Container::Horizontal({
+            options_->main,
+            options_->back,
+        }));
+        break;
+      case Direction::Right:
+        Add(Container::Horizontal({
+            options_->back,
+            options_->main,
+        }));
+        break;
+      case Direction::Up:
+        Add(Container::Vertical({
+            options_->main,
+            options_->back,
+        }));
+        break;
+      case Direction::Down:
+        Add(Container::Vertical({
+            options_->back,
+            options_->main,
+        }));
+        break;
+    }
   }
 
   bool OnEvent(Event event) final {
@@ -53,16 +77,16 @@ class ResizableSplitBase : public ComponentBase {
 
     switch (options_->direction()) {
       case Direction::Left:
-        options_->main_size() = event.mouse().x - box_.x_min;
+        options_->main_size() = std::max(0, event.mouse().x - box_.x_min);
         return true;
       case Direction::Right:
-        options_->main_size() = box_.x_max - event.mouse().x;
+        options_->main_size() = std::max(0, box_.x_max - event.mouse().x);
         return true;
       case Direction::Up:
-        options_->main_size() = event.mouse().y - box_.y_min;
+        options_->main_size() = std::max(0, event.mouse().y - box_.y_min);
         return true;
       case Direction::Down:
-        options_->main_size() = box_.y_max - event.mouse().y;
+        options_->main_size() = std::max(0, box_.y_max - event.mouse().y);
         return true;
     }
 
@@ -70,7 +94,7 @@ class ResizableSplitBase : public ComponentBase {
     return false;
   }
 
-  Element Render() final {
+  Element OnRender() final {
     switch (options_->direction()) {
       case Direction::Left:
         return RenderLeft();
@@ -300,7 +324,3 @@ Component ResizableSplitBottom(Component main, Component back, int* main_size) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

@@ -1,10 +1,12 @@
+// Copyright 2022 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <array>                      // for array
 #include <cstddef>                    // for size_t
 #include <ftxui/component/mouse.hpp>  // for Mouse, Mouse::Left, Mouse::Pressed, Mouse::Released
 #include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
 #include <ftxui/dom/elements.hpp>   // for frame
-#include <memory>  // for shared_ptr, __shared_ptr_access, allocator
-#include <string>  // for string, to_string
+#include <string>                   // for string, to_string
 
 #include "ftxui/component/component.hpp"  // for Slider, Vertical, operator|=
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
@@ -43,6 +45,7 @@ Event MouseReleased(int x, int y) {
 }  // namespace
 
 TEST(SliderTest, Right) {
+  int updated = 0;
   int value = 50;
   auto slider = Slider<int>({
       .value = &value,
@@ -50,23 +53,31 @@ TEST(SliderTest, Right) {
       .max = 100,
       .increment = 10,
       .direction = Direction::Right,
+      .on_change = [&]() { updated++; },
   });
   Screen screen(11, 1);
   Render(screen, slider->Render());
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 0);
   EXPECT_TRUE(slider->OnEvent(MousePressed(3, 0)));
-  EXPECT_EQ(value, 50);
+  EXPECT_EQ(value, 30);
+  EXPECT_EQ(updated, 1);
   EXPECT_TRUE(slider->OnEvent(MousePressed(9, 0)));
   EXPECT_EQ(value, 90);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(9, 2)));
   EXPECT_EQ(value, 90);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(5, 2)));
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 3);
   EXPECT_TRUE(slider->OnEvent(MouseReleased(5, 2)));
   EXPECT_FALSE(slider->OnEvent(MousePressed(5, 2)));
+  EXPECT_EQ(value, 50);
 }
 
 TEST(SliderTest, Left) {
+  int updated = 0;
   int value = 50;
   auto slider = Slider<int>({
       .value = &value,
@@ -74,23 +85,31 @@ TEST(SliderTest, Left) {
       .max = 100,
       .increment = 10,
       .direction = Direction::Left,
+      .on_change = [&]() { updated++; },
   });
   Screen screen(11, 1);
   Render(screen, slider->Render());
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 0);
   EXPECT_TRUE(slider->OnEvent(MousePressed(3, 0)));
-  EXPECT_EQ(value, 50);
+  EXPECT_EQ(value, 70);
+  EXPECT_EQ(updated, 1);
   EXPECT_TRUE(slider->OnEvent(MousePressed(9, 0)));
   EXPECT_EQ(value, 10);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(9, 2)));
   EXPECT_EQ(value, 10);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(5, 2)));
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 3);
   EXPECT_TRUE(slider->OnEvent(MouseReleased(5, 2)));
   EXPECT_FALSE(slider->OnEvent(MousePressed(5, 2)));
+  EXPECT_EQ(value, 50);
 }
 
 TEST(SliderTest, Down) {
+  int updated = 0;
   int value = 50;
   auto slider = Slider<int>({
       .value = &value,
@@ -98,23 +117,32 @@ TEST(SliderTest, Down) {
       .max = 100,
       .increment = 10,
       .direction = Direction::Down,
+      .on_change = [&]() { updated++; },
   });
   Screen screen(1, 11);
   Render(screen, slider->Render());
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 0);
   EXPECT_TRUE(slider->OnEvent(MousePressed(0, 3)));
-  EXPECT_EQ(value, 50);
+  EXPECT_EQ(value, 30);
+  EXPECT_EQ(updated, 1);
   EXPECT_TRUE(slider->OnEvent(MousePressed(0, 9)));
   EXPECT_EQ(value, 90);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(2, 9)));
   EXPECT_EQ(value, 90);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(2, 5)));
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 3);
   EXPECT_TRUE(slider->OnEvent(MouseReleased(2, 5)));
   EXPECT_FALSE(slider->OnEvent(MousePressed(2, 5)));
+  EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 3);
 }
 
 TEST(SliderTest, Up) {
+  int updated = 0;
   int value = 50;
   auto slider = Slider<int>({
       .value = &value,
@@ -122,20 +150,27 @@ TEST(SliderTest, Up) {
       .max = 100,
       .increment = 10,
       .direction = Direction::Up,
+      .on_change = [&]() { updated++; },
   });
   Screen screen(1, 11);
   Render(screen, slider->Render());
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 0);
   EXPECT_TRUE(slider->OnEvent(MousePressed(0, 3)));
-  EXPECT_EQ(value, 50);
+  EXPECT_EQ(value, 70);
+  EXPECT_EQ(updated, 1);
   EXPECT_TRUE(slider->OnEvent(MousePressed(0, 9)));
   EXPECT_EQ(value, 10);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(2, 9)));
   EXPECT_EQ(value, 10);
+  EXPECT_EQ(updated, 2);
   EXPECT_TRUE(slider->OnEvent(MousePressed(2, 5)));
   EXPECT_EQ(value, 50);
+  EXPECT_EQ(updated, 3);
   EXPECT_TRUE(slider->OnEvent(MouseReleased(2, 5)));
   EXPECT_FALSE(slider->OnEvent(MousePressed(2, 5)));
+  EXPECT_EQ(value, 50);
 }
 
 TEST(SliderTest, Focus) {
@@ -193,7 +228,3 @@ TEST(SliderTest, Focus) {
 
 }  // namespace ftxui
 // NOLINTEND
-
-// Copyright 2022 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

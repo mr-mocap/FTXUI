@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <cstdlib>  // for getenv
 #include <string>   // for string, allocator
 
@@ -84,6 +87,10 @@ Terminal::Color ComputeColorSupport() {
 }  // namespace
 
 namespace Terminal {
+
+/// @brief Get the terminal size.
+/// @return The terminal size.
+/// @ingroup screen
 Dimensions Size() {
 #if defined(__EMSCRIPTEN__)
   // This dimension was chosen arbitrarily to be able to display:
@@ -118,6 +125,8 @@ void SetFallbackSize(const Dimensions& fallbackSize) {
   FallbackSize() = fallbackSize;
 }
 
+/// @brief Get the color support of the terminal.
+/// @ingroup screen
 Color ColorSupport() {
   if (!g_cached) {
     g_cached = true;
@@ -126,6 +135,8 @@ Color ColorSupport() {
   return g_cached_supported_color;
 }
 
+/// @brief Override terminal color support in case auto-detection fails
+/// @ingroup dom
 void SetColorSupport(Color color) {
   g_cached = true;
   g_cached_supported_color = color;
@@ -133,7 +144,3 @@ void SetColorSupport(Color color) {
 
 }  // namespace Terminal
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

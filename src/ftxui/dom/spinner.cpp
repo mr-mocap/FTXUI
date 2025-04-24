@@ -1,5 +1,7 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <cstddef>  // for size_t
-#include <memory>   // for allocator, allocator_traits<>::value_type
 #include <string>   // for basic_string, string
 #include <utility>  // for move
 #include <vector>   // for vector, __alloc_traits<>::value_type
@@ -296,7 +298,3 @@ Element spinner(int charset_index, size_t image_index) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

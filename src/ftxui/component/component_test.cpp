@@ -1,5 +1,7 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <memory>  // for shared_ptr, __shared_ptr_access, allocator, __shared_ptr_access<>::element_type, make_shared
-#include <string>  // for string
 
 #include "ftxui/component/component.hpp"       // for Make
 #include "ftxui/component/component_base.hpp"  // for ComponentBase, Component
@@ -171,7 +173,3 @@ TEST(ComponentTest, NonFocusableAreNotFocused) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

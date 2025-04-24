@@ -1,8 +1,9 @@
+// Copyright 2021 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <functional>  // for function
-#include <memory>      // for __shared_ptr_access, shared_ptr
 #include <utility>     // for move
 
-#include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
 #include "ftxui/component/component.hpp"       // for Make, Renderer
 #include "ftxui/component/component_base.hpp"  // for Component, ComponentBase
 #include "ftxui/component/event.hpp"           // for Event
@@ -30,7 +31,7 @@ Component Renderer(std::function<Element()> render) {
    public:
     explicit Impl(std::function<Element()> render)
         : render_(std::move(render)) {}
-    Element Render() override { return render_(); }
+    Element OnRender() override { return render_(); }
     std::function<Element()> render_;
   };
 
@@ -87,7 +88,7 @@ Component Renderer(std::function<Element(bool)> render) {
         : render_(std::move(render)) {}
 
    private:
-    Element Render() override { return render_(Focused()) | reflect(box_); }
+    Element OnRender() override { return render_(Focused()) | reflect(box_); }
     bool Focusable() const override { return true; }
     bool OnEvent(Event event) override {
       if (event.is_mouse() && box_.Contain(event.mouse().x, event.mouse().y)) {
@@ -130,7 +131,3 @@ ComponentDecorator Renderer(ElementDecorator decorator) {  // NOLINT
 }
 
 }  // namespace ftxui
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

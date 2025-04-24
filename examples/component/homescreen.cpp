@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <stddef.h>    // for size_t
 #include <array>       // for array
 #include <atomic>      // for atomic
@@ -261,7 +264,7 @@ int main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Spiner
+  // Spinner
   // ---------------------------------------------------------------------------
   auto spinner_tab_renderer = Renderer([&] {
     Elements entries;
@@ -421,7 +424,7 @@ int main() {
   auto paragraph_renderer_left = Renderer([&] {
     std::string str =
         "Lorem Ipsum is simply dummy text of the printing and typesetting "
-        "industry. Lorem Ipsum has been the industry's standard dummy text "
+        "industry.\nLorem Ipsum has been the industry's standard dummy text "
         "ever since the 1500s, when an unknown printer took a galley of type "
         "and scrambled it to make a type specimen book.";
     return vbox({
@@ -487,15 +490,24 @@ int main() {
       },
       &tab_index);
 
+  auto exit_button =
+      Button("Exit", [&] { screen.Exit(); }, ButtonOption::Animated());
+
   auto main_container = Container::Vertical({
-      tab_selection,
+      Container::Horizontal({
+          tab_selection,
+          exit_button,
+      }),
       tab_content,
   });
 
   auto main_renderer = Renderer(main_container, [&] {
     return vbox({
         text("FTXUI Demo") | bold | hcenter,
-        tab_selection->Render(),
+        hbox({
+            tab_selection->Render() | flex,
+            exit_button->Render(),
+        }),
         tab_content->Render() | flex,
     });
   });
@@ -521,7 +533,3 @@ int main() {
 
   return 0;
 }
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

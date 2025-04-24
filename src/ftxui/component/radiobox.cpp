@@ -1,9 +1,10 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <functional>  // for function
-#include <memory>      // for allocator_traits<>::value_type
 #include <utility>     // for move
 #include <vector>      // for vector
 
-#include "ftxui/component/captured_mouse.hpp"     // for CapturedMouse
 #include "ftxui/component/component.hpp"          // for Make, Radiobox
 #include "ftxui/component/component_base.hpp"     // for ComponentBase
 #include "ftxui/component/component_options.hpp"  // for RadioboxOption, EntryState
@@ -23,10 +24,11 @@ namespace {
 /// @ingroup component
 class RadioboxBase : public ComponentBase, public RadioboxOption {
  public:
-  explicit RadioboxBase(RadioboxOption option) : RadioboxOption(option) {}
+  explicit RadioboxBase(const RadioboxOption& option)
+      : RadioboxOption(option) {}
 
  private:
-  Element Render() override {
+  Element OnRender() override {
     Clamp();
     Elements elements;
     const bool is_menu_focused = Focused();
@@ -34,21 +36,17 @@ class RadioboxBase : public ComponentBase, public RadioboxOption {
     for (int i = 0; i < size(); ++i) {
       const bool is_focused = (focused_entry() == i) && is_menu_focused;
       const bool is_selected = (hovered_ == i);
-      auto focus_management = !is_selected      ? nothing
-                              : is_menu_focused ? focus
-                                                : select;
       auto state = EntryState{
-          entries[i],
-          selected() == i,
-          is_selected,
-          is_focused,
+          entries[i], selected() == i, is_selected, is_focused, i,
       };
       auto element =
           (transform ? transform : RadioboxOption::Simple().transform)(state);
-
-      elements.push_back(element | focus_management | reflect(boxes_[i]));
+      if (is_selected) {
+        element |= focus;
+      }
+      elements.push_back(element | reflect(boxes_[i]));
     }
-    return vbox(std::move(elements)) | reflect(box_);
+    return vbox(std::move(elements), hovered_) | reflect(box_);
   }
 
   // NOLINTNEXTLINE(readability-function-cognitive-complexity)
@@ -121,7 +119,7 @@ class RadioboxBase : public ComponentBase, public RadioboxOption {
       TakeFocus();
       focused_entry() = i;
       if (event.mouse().button == Mouse::Left &&
-          event.mouse().motion == Mouse::Released) {
+          event.mouse().motion == Mouse::Pressed) {
         if (selected() != i) {
           selected() = i;
           on_change();
@@ -202,6 +200,7 @@ class RadioboxBase : public ComponentBase, public RadioboxOption {
 /// ○ entry 2
 /// ○ entry 3
 /// ```
+/// NOLINTNEXTLINE
 Component Radiobox(RadioboxOption option) {
   return Make<RadioboxBase>(std::move(option));
 }
@@ -237,13 +236,9 @@ Component Radiobox(RadioboxOption option) {
 Component Radiobox(ConstStringListRef entries,
                    int* selected,
                    RadioboxOption option) {
-  option.entries = entries;
+  option.entries = std::move(entries);
   option.selected = selected;
   return Make<RadioboxBase>(std::move(option));
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

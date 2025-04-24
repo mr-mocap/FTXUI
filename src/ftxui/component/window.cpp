@@ -1,9 +1,18 @@
+// Copyright 2023 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #define NOMINMAX
 #include <algorithm>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/component_base.hpp>
+#include <ftxui/component/component_options.hpp>
 #include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
-#include "ftxui/dom/node_decorator.hpp"            // for NodeDecorator
+#include <memory>
+#include <utility>
+#include "ftxui/dom/elements.hpp"  // for text, window, hbox, vbox, size, clear_under, reflect, emptyElement
+#include "ftxui/dom/node_decorator.hpp"  // for NodeDecorator
+#include "ftxui/screen/color.hpp"        // for Color
+#include "ftxui/screen/screen.hpp"       // for Screen
 
 namespace ftxui {
 
@@ -84,7 +93,7 @@ class ResizeDecorator : public NodeDecorator {
 
 Element DefaultRenderState(const WindowRenderState& state) {
   Element element = state.inner;
-  if (state.active) {
+  if (!state.active) {
     element |= dim;
   }
 
@@ -115,7 +124,7 @@ class WindowImpl : public ComponentBase, public WindowOptions {
   }
 
  private:
-  Element Render() final {
+  Element OnRender() final {
     auto element = ComponentBase::Render();
 
     const bool captureable =
@@ -203,7 +212,7 @@ class WindowImpl : public ComponentBase, public WindowOptions {
       }
 
       // Clamp the window size.
-      width() = std::max<int>(width(), title().size() + 2);
+      width() = std::max<int>(width(), static_cast<int>(title().size() + 2));
       height() = std::max<int>(height(), 2);
 
       return true;
@@ -222,8 +231,10 @@ class WindowImpl : public ComponentBase, public WindowOptions {
       return true;
     }
 
-    if (event.mouse().button != Mouse::Left ||
-        event.mouse().motion != Mouse::Pressed) {
+    if (event.mouse().button != Mouse::Left) {
+      return true;
+    }
+    if (event.mouse().motion != Mouse::Pressed) {
       return true;
     }
 
@@ -303,7 +314,3 @@ Component Window(WindowOptions option) {
 }
 
 };  // namespace ftxui
-
-// Copyright 2023 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

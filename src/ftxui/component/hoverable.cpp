@@ -1,6 +1,8 @@
-#include <ftxui/component/captured_mouse.hpp>  // for CapturedMouse
-#include <functional>                          // for function
-#include <utility>                             // for move
+// Copyright 2022 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
+#include <functional>  // for function
+#include <utility>     // for move
 
 #include "ftxui/component/component.hpp"  // for ComponentDecorator, Hoverable, Make
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
@@ -47,8 +49,8 @@ Component Hoverable(Component component, bool* hover) {
     }
 
    private:
-    Element Render() override {
-      return ComponentBase::Render() | reflect(box_);
+    Element OnRender() override {
+      return ComponentBase::OnRender() | reflect(box_);
     }
 
     bool OnEvent(Event event) override {
@@ -96,8 +98,8 @@ Component Hoverable(Component component,
     }
 
    private:
-    Element Render() override {
-      return ComponentBase::Render() | reflect(box_);
+    Element OnRender() override {
+      return ComponentBase::OnRender() | reflect(box_);
     }
 
     bool OnEvent(Event event) override {
@@ -211,7 +213,3 @@ ComponentDecorator Hoverable(std::function<void(bool)> on_change) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2022 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

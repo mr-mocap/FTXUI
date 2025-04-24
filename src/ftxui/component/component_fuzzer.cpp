@@ -1,5 +1,7 @@
+// Copyright 2021 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <cassert>
-#include <iostream>
 #include <vector>
 #include "ftxui/component/component.hpp"
 #include "ftxui/component/terminal_input_parser.hpp"
@@ -8,8 +10,9 @@ using namespace ftxui;
 namespace {
 
 bool GeneratorBool(const char*& data, size_t& size) {
-  if (size == 0)
+  if (size == 0) {
     return false;
+  }
 
   auto out = bool(data[0] % 2);
   data++;
@@ -95,7 +98,7 @@ MenuEntryOption GeneratorMenuEntryOption(const char* data, size_t size) {
 MenuOption GeneratorMenuOption(const char* data, size_t size) {
   MenuOption option;
   option.underline = GeneratorUnderlineOption(data, size);
-  option.entries = GeneratorMenuEntryOption(data, size);
+  option.entries_option = GeneratorMenuEntryOption(data, size);
   option.direction = static_cast<Direction>(GeneratorInt(data, size) % 4);
   return option;
 }
@@ -224,7 +227,3 @@ extern "C" int LLVMFuzzerTestOneInput(const char* data, size_t size) {
   }
   return 0;  // Non-zero return values are reserved for future use.
 }
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

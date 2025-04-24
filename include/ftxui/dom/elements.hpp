@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #ifndef FTXUI_DOM_ELEMENTS_HPP
 #define FTXUI_DOM_ELEMENTS_HPP
 
@@ -11,7 +14,6 @@
 #include "ftxui/dom/node.hpp"
 #include "ftxui/screen/box.hpp"
 #include "ftxui/screen/color.hpp"
-#include "ftxui/screen/screen.hpp"
 #include "ftxui/screen/terminal.hpp"
 #include "ftxui/util/ref.hpp"
 
@@ -77,7 +79,7 @@ Decorator borderStyled(BorderStyle);
 Decorator borderStyled(BorderStyle, Color);
 Decorator borderStyled(Color);
 Decorator borderWith(const Pixel&);
-Element window(Element title, Element content);
+Element window(Element title, Element content, BorderStyle border = ROUNDED);
 Element spinner(int charset_index, size_t image_index);
 Element paragraph(const std::string& text);
 Element paragraphAlignLeft(const std::string& text);
@@ -93,6 +95,7 @@ Element canvas(std::function<void(Canvas&)>);
 // -- Decorator ---
 Element bold(Element);
 Element dim(Element);
+Element italic(Element);
 Element inverted(Element);
 Element underlined(Element);
 Element underlinedDouble(Element);
@@ -111,6 +114,11 @@ Decorator focusPositionRelative(float x, float y);
 Element automerge(Element child);
 Decorator hyperlink(std::string link);
 Element hyperlink(std::string link, Element child);
+Element selectionStyleReset(Element);
+Decorator selectionColor(Color foreground);
+Decorator selectionBackgroundColor(Color foreground);
+Decorator selectionForegroundColor(Color foreground);
+Decorator selectionStyle(std::function<void(Pixel&)> style);
 
 // --- Layout is
 // Horizontal, Vertical or stacked set of elements.
@@ -154,7 +162,7 @@ Element frame(Element);
 Element xframe(Element);
 Element yframe(Element);
 Element focus(Element);
-Element select(Element);
+Element select(Element e);  // Deprecated - Alias for focus.
 
 // --- Cursor ---
 // Those are similar to `focus`, but also change the shape of the cursor.
@@ -167,6 +175,7 @@ Element focusCursorUnderlineBlinking(Element);
 
 // --- Misc ---
 Element vscroll_indicator(Element);
+Element hscroll_indicator(Element);
 Decorator reflect(Box& box);
 // Before drawing the |element| clear the pixel below. This is useful in
 // combinaison with dbox.
@@ -180,7 +189,7 @@ Element align_right(Element);
 Element nothing(Element element);
 
 namespace Dimension {
-Dimensions Fit(Element&);
+Dimensions Fit(Element&, bool extend_beyond_screen = false);
 }  // namespace Dimension
 
 }  // namespace ftxui
@@ -191,7 +200,3 @@ Dimensions Fit(Element&);
 // Include old definitions using wstring.
 #include "ftxui/dom/deprecated.hpp"
 #endif  // FTXUI_DOM_ELEMENTS_HPP
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

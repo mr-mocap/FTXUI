@@ -1,6 +1,8 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <memory>   // for make_shared, __shared_ptr_access
 #include <utility>  // for move
-#include <vector>   // for __alloc_traits<>::value_type
 
 #include "ftxui/dom/elements.hpp"     // for Element, unpack, Decorator, reflect
 #include "ftxui/dom/node.hpp"         // for Node, Elements
@@ -9,6 +11,7 @@
 #include "ftxui/screen/screen.hpp"    // for Screen
 
 namespace ftxui {
+namespace {
 
 // Helper class.
 class Reflect : public Node {
@@ -29,12 +32,13 @@ class Reflect : public Node {
 
   void Render(Screen& screen) final {
     reflected_box_ = Box::Intersection(screen.stencil, reflected_box_);
-    return Node::Render(screen);
+    Node::Render(screen);
   }
 
  private:
   Box& reflected_box_;
 };
+}  // namespace
 
 Decorator reflect(Box& box) {
   return [&](Element child) -> Element {
@@ -43,7 +47,3 @@ Decorator reflect(Box& box) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.
