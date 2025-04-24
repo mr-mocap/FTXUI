@@ -32,16 +32,6 @@ class ConstRef {
   const T& operator*() const { return *Address(); }
   const T* operator->() const { return Address(); }
 
-  ConstRef(ConstRef<T> &&) = default;
-  ConstRef(const ConstRef<T> &) = default;
-
-  // Make a "reseatable" reference
-  ConstRef<T>& operator=(const ConstRef<T>&) = default;
-  ConstRef<T>& operator=(ConstRef<T> &&) = default;
-
-  const T& operator*() const { return getReference(); }
-  const T& operator()() const { return getReference(); }
-  const T* operator->() const { return getPointer(); }
  private:
   std::variant<T, const T*> variant_ = T{};
 
