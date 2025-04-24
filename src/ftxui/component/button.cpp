@@ -1,10 +1,12 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
+
 #include <functional>  // for function
-#include <memory>      // for shared_ptr
 #include <utility>     // for move
 
 #include "ftxui/component/animation.hpp"  // for Animator, Params (ptr only)
-#include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
-#include "ftxui/component/component.hpp"       // for Make, Button
+#include "ftxui/component/component.hpp"  // for Make, Button
 #include "ftxui/component/component_base.hpp"  // for ComponentBase
 #include "ftxui/component/component_options.hpp"  // for ButtonOption, AnimatedColorOption, AnimatedColorsOption, EntryState
 #include "ftxui/component/event.hpp"  // for Event, Event::Return
@@ -35,7 +37,7 @@ class ButtonBase : public ComponentBase, public ButtonOption {
   explicit ButtonBase(ButtonOption option) : ButtonOption(std::move(option)) {}
 
   // Component implementation:
-  Element Render() override {
+  Element OnRender() override {
     const bool active = Active();
     const bool focused = Focused();
     const bool focused_or_hover = focused || mouse_hover_;
@@ -45,17 +47,16 @@ class ButtonBase : public ComponentBase, public ButtonOption {
       SetAnimationTarget(target);
     }
 
-    auto focus_management = focused ? focus : active ? select : nothing;
-    const EntryState state = {
-        *label,
-        false,
-        active,
-        focused_or_hover,
+    const EntryState state{
+        *label, false, active, focused_or_hover, Index(),
     };
 
     auto element = (transform ? transform : DefaultTransform)  //
         (state);
-    return element | AnimatedColorStyle() | focus_management | reflect(box_);
+    element |= AnimatedColorStyle();
+    element |= focus;
+    element |= reflect(box_);
+    return element;
   }
 
   Decorator AnimatedColorStyle() {
@@ -94,10 +95,13 @@ class ButtonBase : public ComponentBase, public ButtonOption {
   }
 
   void OnClick() {
-    on_click();
     animation_background_ = 0.5F;  // NOLINT
     animation_foreground_ = 0.5F;  // NOLINT
     SetAnimationTarget(1.F);       // NOLINT
+
+    // TODO(arthursonzogni): Consider posting the task to the main loop, instead
+    // of invoking it immediately.
+    on_click();  // May delete this.
   }
 
   bool OnEvent(Event event) override {
@@ -106,7 +110,7 @@ class ButtonBase : public ComponentBase, public ButtonOption {
     }
 
     if (event == Event::Return) {
-      OnClick();
+      OnClick();  // May delete this.
       return true;
     }
     return false;
@@ -123,7 +127,7 @@ class ButtonBase : public ComponentBase, public ButtonOption {
     if (event.mouse().button == Mouse::Left &&
         event.mouse().motion == Mouse::Pressed) {
       TakeFocus();
-      OnClick();
+      OnClick();  // May delete this.
       return true;
     }
 
@@ -145,7 +149,7 @@ class ButtonBase : public ComponentBase, public ButtonOption {
 };
 
 }  // namespace
-   //
+
 /// @brief Draw a button. Execute a function when clicked.
 /// @param option Additional optional parameters.
 /// @ingroup component
@@ -206,7 +210,3 @@ Component Button(ConstStringRef label,
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

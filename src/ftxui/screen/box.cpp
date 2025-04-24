@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include "ftxui/screen/box.hpp"
 
 #include <algorithm>
@@ -27,6 +30,17 @@ Box Box::Union(Box a, Box b) {
   };
 }
 
+/// Shift the box by (x,y).
+/// @param x horizontal shift.
+/// @param y vertical shift.
+/// @ingroup screen
+void Box::Shift(int x, int y) {
+  x_min += x;
+  x_max += x;
+  y_min += y;
+  y_max += y;
+}
+
 /// @return whether (x,y) is contained inside the box.
 /// @ingroup screen
 bool Box::Contain(int x, int y) const {
@@ -34,6 +48,12 @@ bool Box::Contain(int x, int y) const {
          x_max >= x &&  //
          y_min <= y &&  //
          y_max >= y;
+}
+
+/// @return whether the box is empty.
+/// @ingroup screen
+bool Box::IsEmpty() const {
+  return x_min > x_max || y_min > y_max;
 }
 
 /// @return whether |other| is the same as |this|
@@ -50,7 +70,3 @@ bool Box::operator!=(const Box& other) const {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

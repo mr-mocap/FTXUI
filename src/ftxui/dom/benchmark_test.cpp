@@ -1,4 +1,6 @@
-#include <iostream>
+// Copyright 2021 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <benchmark/benchmark.h>
 
 #include "ftxui/dom/elements.hpp"  // for gauge, separator, operator|, text, Element, hbox, vbox, blink, border, inverted
@@ -59,6 +61,10 @@ static void BenchmarkStyle(benchmark::State& state) {
           text("Test") | strikethrough,
           text("Test") | color(Color::Red),
           text("Test") | bgcolor(Color::Red),
+          text("Test") | color(Color::RGB(42, 87, 124)),
+          text("Test") | bgcolor(Color::RGB(42, 87, 124)),
+          text("Test") | color(Color::RGB(42, 87, 124)) |
+              bgcolor(Color::RGB(172, 94, 212)),
           text("Test") | blink,
           text("Test") | automerge,
       }));
@@ -78,7 +84,3 @@ BENCHMARK(BenchmarkStyle)
 
 }  // namespace ftxui
 // NOLINTEND
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

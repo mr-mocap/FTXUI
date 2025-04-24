@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <algorithm>               // for max
 #include <array>                   // for array
 #include <ftxui/screen/color.hpp>  // for Color
@@ -5,16 +8,17 @@
 #include <optional>  // for optional, nullopt
 #include <string>    // for basic_string, string
 #include <utility>   // for move
-#include <vector>    // for __alloc_traits<>::value_type
 
 #include "ftxui/dom/elements.hpp"  // for unpack, Element, Decorator, BorderStyle, ROUNDED, borderStyled, Elements, DASHED, DOUBLE, EMPTY, HEAVY, LIGHT, border, borderDashed, borderDouble, borderEmpty, borderHeavy, borderLight, borderRounded, borderWith, window
 #include "ftxui/dom/node.hpp"      // for Node, Elements
 #include "ftxui/dom/requirement.hpp"  // for Requirement
 #include "ftxui/screen/box.hpp"       // for Box
+#include "ftxui/screen/pixel.hpp"     // for Pixel
 #include "ftxui/screen/screen.hpp"    // for Pixel, Screen
 
 namespace ftxui {
 
+namespace {
 using Charset = std::array<std::string, 6>;  // NOLINT
 using Charsets = std::array<Charset, 6>;     // NOLINT
 // NOLINTNEXTLINE
@@ -34,7 +38,8 @@ class Border : public Node {
          BorderStyle style,
          std::optional<Color> foreground_color = std::nullopt)
       : Node(std::move(children)),
-        charset_(simple_border_charset[style]),
+        charset_(simple_border_charset[style])  // NOLINT
+        ,
         foreground_color_(foreground_color) {}  // NOLINT
 
   const Charset& charset_;  // NOLINT
@@ -49,10 +54,10 @@ class Border : public Node {
       requirement_.min_x =
           std::max(requirement_.min_x, children_[1]->requirement().min_x + 2);
     }
-    requirement_.selected_box.x_min++;
-    requirement_.selected_box.x_max++;
-    requirement_.selected_box.y_min++;
-    requirement_.selected_box.y_max++;
+    requirement_.focused.box.x_min++;
+    requirement_.focused.box.x_max++;
+    requirement_.focused.box.y_min++;
+    requirement_.focused.box.y_max++;
   }
 
   void SetBox(Box box) override {
@@ -60,7 +65,8 @@ class Border : public Node {
     if (children_.size() == 2) {
       Box title_box;
       title_box.x_min = box.x_min + 1;
-      title_box.x_max = box.x_max - 1;
+      title_box.x_max = std::min(box.x_max - 1,
+                                 box.x_min + children_[1]->requirement().min_x);
       title_box.y_min = box.y_min;
       title_box.y_max = box.y_min;
       children_[1]->SetBox(title_box);
@@ -140,10 +146,8 @@ class BorderPixel : public Node {
       requirement_.min_x =
           std::max(requirement_.min_x, children_[1]->requirement().min_x + 2);
     }
-    requirement_.selected_box.x_min++;
-    requirement_.selected_box.x_max++;
-    requirement_.selected_box.y_min++;
-    requirement_.selected_box.y_max++;
+
+    requirement_.focused.box.Shift(1, 1);
   }
 
   void SetBox(Box box) override {
@@ -187,6 +191,7 @@ class BorderPixel : public Node {
     }
   }
 };
+}  // namespace
 
 /// @brief Draw a border around the element.
 /// @ingroup dom
@@ -261,7 +266,7 @@ Decorator borderStyled(BorderStyle style, Color foreground_color) {
   };
 }
 
-/// @brief Draw a light border around the element.
+/// @brief Draw a dashed border around the element.
 /// @ingroup dom
 /// @see border
 /// @see borderLight
@@ -296,7 +301,7 @@ Element borderDashed(Element child) {
   return std::make_shared<Border>(unpack(std::move(child)), DASHED);
 }
 
-/// @brief Draw a dashed border around the element.
+/// @brief Draw a light border around the element.
 /// @ingroup dom
 /// @see border
 /// @see borderLight
@@ -474,6 +479,7 @@ Element borderEmpty(Element child) {
 /// @brief Draw window with a title and a border around the element.
 /// @param title The title of the window.
 /// @param content The element to be wrapped.
+/// @param border The style of the border. Default is ROUNDED.
 /// @ingroup dom
 /// @see border
 ///
@@ -482,6 +488,12 @@ Element borderEmpty(Element child) {
 /// ```cpp
 /// Element document = window(text("Title"),
 ///                           text("content")
+///                    );
+///
+/// // With specifying border
+/// Element document = window(text("Title"),
+///                           text("content"),
+///                           ROUNDED
 ///                    );
 /// ```
 ///
@@ -492,12 +504,8 @@ Element borderEmpty(Element child) {
 /// │content│
 /// └───────┘
 /// ```
-Element window(Element title, Element content) {
+Element window(Element title, Element content, BorderStyle border) {
   return std::make_shared<Border>(unpack(std::move(content), std::move(title)),
-                                  ROUNDED);
+                                  border);
 }
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

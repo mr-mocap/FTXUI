@@ -1,7 +1,9 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <algorithm>  // for min, max
 #include <memory>     // for make_shared, __shared_ptr_access
 #include <utility>    // for move
-#include <vector>     // for __alloc_traits<>::value_type
 
 #include "ftxui/dom/elements.hpp"  // for Constraint, WidthOrHeight, EQUAL, GREATER_THAN, LESS_THAN, WIDTH, unpack, Decorator, Element, size
 #include "ftxui/dom/node.hpp"      // for Node, Elements
@@ -10,13 +12,14 @@
 
 namespace ftxui {
 
+namespace {
 class Size : public Node {
  public:
   Size(Element child, WidthOrHeight direction, Constraint constraint, int value)
       : Node(unpack(std::move(child))),
         direction_(direction),
         constraint_(constraint),
-        value_(value) {}
+        value_(std::max(0, value)) {}
 
   void ComputeRequirement() override {
     Node::ComputeRequirement();
@@ -75,6 +78,7 @@ class Size : public Node {
   Constraint constraint_;
   int value_;
 };
+}  // namespace
 
 /// @brief Apply a constraint on the size of an element.
 /// @param direction Whether the WIDTH of the HEIGHT of the element must be
@@ -89,7 +93,3 @@ Decorator size(WidthOrHeight direction, Constraint constraint, int value) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

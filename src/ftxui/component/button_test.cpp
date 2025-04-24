@@ -1,5 +1,6 @@
-#include <chrono>  // for operator""s, chrono_literals
-#include <memory>  // for __shared_ptr_access, shared_ptr, allocator
+// Copyright 2022 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <string>  // for string
 
 #include "ftxui/component/animation.hpp"          // for Duration, Params
@@ -191,7 +192,3 @@ TEST(ButtonTest, Animation) {
 
 }  // namespace ftxui
 // NOLINTEND
-
-// Copyright 2022 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

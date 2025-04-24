@@ -13,11 +13,13 @@ add_executable(ftxui-tests
   src/ftxui/component/component_test.cpp
   src/ftxui/component/component_test.cpp
   src/ftxui/component/container_test.cpp
+  src/ftxui/component/dropdown_test.cpp
   src/ftxui/component/hoverable_test.cpp
   src/ftxui/component/input_test.cpp
   src/ftxui/component/menu_test.cpp
   src/ftxui/component/modal_test.cpp
   src/ftxui/component/radiobox_test.cpp
+  src/ftxui/util/ref_test.cpp
   src/ftxui/component/receiver_test.cpp
   src/ftxui/component/resizable_split_test.cpp
   src/ftxui/component/screen_interactive_test.cpp
@@ -37,8 +39,10 @@ add_executable(ftxui-tests
   src/ftxui/dom/gridbox_test.cpp
   src/ftxui/dom/hbox_test.cpp
   src/ftxui/dom/hyperlink_test.cpp
+  src/ftxui/dom/italic_test.cpp
   src/ftxui/dom/linear_gradient_test.cpp
   src/ftxui/dom/scroll_indicator_test.cpp
+  src/ftxui/dom/selection_test.cpp
   src/ftxui/dom/separator_test.cpp
   src/ftxui/dom/spinner_test.cpp
   src/ftxui/dom/table_test.cpp
@@ -58,6 +62,11 @@ target_include_directories(ftxui-tests
   PRIVATE src
 )
 target_compile_features(ftxui-tests PRIVATE cxx_std_20)
+
+# Disable unity build for tests. There are several files defining the same
+# function in different anonymous namespaces. This is not allowed in unity
+# builds, as it would result in multiple definitions of the same function.
+set_target_properties(ftxui-tests PROPERTIES UNITY_BUILD OFF)
 
 if (FTXUI_MICROSOFT_TERMINAL_FALLBACK)
   target_compile_definitions(ftxui-tests

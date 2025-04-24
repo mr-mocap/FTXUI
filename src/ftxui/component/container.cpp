@@ -1,8 +1,10 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <algorithm>  // for max, min
 #include <cstddef>    // for size_t
 #include <memory>  // for make_shared, __shared_ptr_access, allocator, shared_ptr, allocator_traits<>::value_type
 #include <utility>  // for move
-#include <vector>   // for vector, __alloc_traits<>::value_type
 
 #include "ftxui/component/component.hpp"  // for Horizontal, Vertical, Tab
 #include "ftxui/component/component_base.hpp"  // for Components, Component, ComponentBase
@@ -82,8 +84,8 @@ class ContainerBase : public ComponentBase {
       return;
     }
     for (size_t offset = 1; offset < children_.size(); ++offset) {
-      const size_t i = ((size_t(*selector_ + offset * dir + children_.size())) %
-                        children_.size());
+      const size_t i =
+          (*selector_ + offset * dir + children_.size()) % children_.size();
       if (children_[i]->Focusable()) {
         *selector_ = int(i);
         return;
@@ -96,7 +98,7 @@ class VerticalContainer : public ContainerBase {
  public:
   using ContainerBase::ContainerBase;
 
-  Element Render() override {
+  Element OnRender() override {
     Elements elements;
     elements.reserve(children_.size());
     for (auto& it : children_) {
@@ -161,6 +163,7 @@ class VerticalContainer : public ContainerBase {
       return false;
     }
 
+    const int old_selected = *selector_;
     if (event.mouse().button == Mouse::WheelUp) {
       MoveSelector(-1);
     }
@@ -169,7 +172,7 @@ class VerticalContainer : public ContainerBase {
     }
     *selector_ = std::max(0, std::min(int(children_.size()) - 1, *selector_));
 
-    return true;
+    return old_selected != *selector_;
   }
 
   Box box_;
@@ -179,7 +182,7 @@ class HorizontalContainer : public ContainerBase {
  public:
   using ContainerBase::ContainerBase;
 
-  Element Render() override {
+  Element OnRender() override {
     Elements elements;
     elements.reserve(children_.size());
     for (auto& it : children_) {
@@ -215,7 +218,7 @@ class TabContainer : public ContainerBase {
  public:
   using ContainerBase::ContainerBase;
 
-  Element Render() override {
+  Element OnRender() override {
     const Component active_child = ActiveChild();
     if (active_child) {
       return active_child->Render();
@@ -237,11 +240,11 @@ class TabContainer : public ContainerBase {
 
 class StackedContainer : public ContainerBase {
  public:
-  StackedContainer(Components children)
+  explicit StackedContainer(Components children)
       : ContainerBase(std::move(children), nullptr) {}
 
  private:
-  Element Render() final {
+  Element OnRender() final {
     Elements elements;
     for (auto& child : children_) {
       elements.push_back(child->Render());
@@ -252,7 +255,7 @@ class StackedContainer : public ContainerBase {
   }
 
   bool Focusable() const final {
-    for (auto& child : children_) {
+    for (const auto& child : children_) {
       if (child->Focusable()) {
         return true;
       }
@@ -261,13 +264,14 @@ class StackedContainer : public ContainerBase {
   }
 
   Component ActiveChild() final {
-    if (children_.size() == 0)
+    if (children_.empty()) {
       return nullptr;
+    }
     return children_[0];
   }
 
   void SetActiveChild(ComponentBase* child) final {
-    if (children_.size() == 0) {
+    if (children_.empty()) {
       return;
     }
 
@@ -330,7 +334,7 @@ Component Vertical(Components children) {
 ///   children_2,
 ///   children_3,
 ///   children_4,
-/// });
+/// }, &selected_children);
 /// ```
 Component Vertical(Components children, int* selector) {
   return std::make_shared<VerticalContainer>(std::move(children), selector);
@@ -351,7 +355,7 @@ Component Vertical(Components children, int* selector) {
 ///   children_2,
 ///   children_3,
 ///   children_4,
-/// }, &selected_children);
+/// });
 /// ```
 Component Horizontal(Components children) {
   return Horizontal(std::move(children), nullptr);
@@ -432,7 +436,3 @@ Component Stacked(Components children) {
 }  // namespace Container
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

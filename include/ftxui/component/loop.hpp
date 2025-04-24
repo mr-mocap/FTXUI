@@ -1,3 +1,6 @@
+// Copyright 2022 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #ifndef FTXUI_COMPONENT_LOOP_HPP
 #define FTXUI_COMPONENT_LOOP_HPP
 
@@ -21,11 +24,14 @@ class Loop {
   void RunOnceBlocking();
   void Run();
 
- private:
-  // This class is non copyable.
+  // This class is non copyable/movable.
+  Loop(const Loop&) = default;
+  Loop(Loop&&) = delete;
+  Loop& operator=(Loop&&) = delete;
   Loop(const ScreenInteractive&) = delete;
   Loop& operator=(const Loop&) = delete;
 
+ private:
   ScreenInteractive* screen_;
   Component component_;
 };
@@ -33,7 +39,3 @@ class Loop {
 }  // namespace ftxui
 
 #endif  // FTXUI_COMPONENT_LOOP_HPP
-
-// Copyright 2022 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

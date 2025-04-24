@@ -1,3 +1,6 @@
+// Copyright 2023 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <ftxui/component/component_base.hpp>  // for ComponentBase, Component
 #include <ftxui/dom/elements.hpp>  // for operator|, Element, flex, bgcolor, text, vbox, center
 #include <ftxui/dom/linear_gradient.hpp>  // for LinearGradient
@@ -22,8 +25,8 @@ int main() {
   std::string slider_end_text;
 
   auto slider_angle = Slider(&slider_angle_text, &angle, 0, 360);
-  auto slider_start = Slider(&slider_start_text, &start, 0.f, 1.f);
-  auto slider_end = Slider(&slider_end_text, &end, 0.f, 1.f);
+  auto slider_start = Slider(&slider_start_text, &start, 0.f, 1.f, 0.05f);
+  auto slider_end = Slider(&slider_end_text, &end, 0.f, 1.f, 0.05f);
 
   auto layout = Container::Vertical({
       slider_angle,
@@ -50,7 +53,3 @@ int main() {
 
   screen.Loop(renderer);
 }
-
-// Copyright 2023 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

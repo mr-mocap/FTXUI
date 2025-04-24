@@ -1,5 +1,6 @@
 ---
 Checks: "*,
+        -*-macro-usage,
         -*-magic-numbers,
         -*-narrowing-conversions
         -*-unnecessary-value-param,
@@ -9,6 +10,7 @@ Checks: "*,
         -android-*,
         -bugprone-easily-swappable-parameters,
         -cppcoreguidelines-non-private-member-variables-in-classes,
+        -cppcoreguidelines-pro-type-union-access,
         -fuchsia-*,
         -google-*,
         -hicpp-signed-bitwise,
@@ -22,7 +24,10 @@ Checks: "*,
         -readability-identifier-length,
         -readability-implicit-bool-conversion,
         -readability-non-const-parameter,
+        -readability-simplify-boolean-expr,
         -readability-static-accessed-through-instance,
+        -readability-use-anyofallof,
+        -readability-avoid-nested-conditional-operator,
         -zircon-*,
 "
 WarningsAsErrors: ''

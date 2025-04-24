@@ -32,7 +32,7 @@ A simple cross-platform C++ library for terminal based user interfaces!
 
 ## Feature
  * Functional style. Inspired by
-   [[1]](https://hackernoon.com/building-reactive-terminal-interfaces-in-c-d392ce34e649?gi=d9fb9ce35901)
+   [1](https://hackernoon.com/building-reactive-terminal-interfaces-in-c-d392ce34e649?gi=d9fb9ce35901)
    and [React](https://reactjs.org/)
  * Simple and elegant syntax (in my opinion)
  * Keyboard & mouse navigation.
@@ -43,7 +43,7 @@ A simple cross-platform C++ library for terminal based user interfaces!
  * **Cross platform**: Linux/MacOS (main target), WebAssembly, Windows (Thanks to contributors!).
  * Learn by [examples](#documentation), and [tutorials](#documentation)
  * Multiple packages: CMake [FetchContent]([https://bewagner.net/programming/2020/05/02/cmake-fetchcontent/](https://cmake.org/cmake/help/latest/module/FetchContent.html)) (preferred), vcpkg, pkgbuild, conan.
- * Good practises: documentation, tests, fuzzers, performance tests, automated CI, automated packaging, etc...
+ * Good practices: documentation, tests, fuzzers, performance tests, automated CI, automated packaging, etc...
 
 ## Documentation
 
@@ -73,7 +73,7 @@ A simple cross-platform C++ library for terminal based user interfaces!
 
 #### DOM
 
-This module defines a hierarchical set of Element. An element manages layout and can be responsive to the terminal dimensions.
+This module defines a hierarchical set of Element. An Element manages layout and can be responsive to the terminal dimensions.
 
 They are declared in [<ftxui/dom/elements.hpp>](https://arthursonzogni.github.io/FTXUI/elements_8hpp_source.html
 )
@@ -93,7 +93,7 @@ Element can become flexible using the the `flex` decorator.
 ![image](https://user-images.githubusercontent.com/4759106/147242524-7103b5d9-1a92-4e2d-ac70-b3d6740061e3.png)
   
   
-[Example](https://arthursonzogni.github.io/FTXUI/examples_2dom_2gridbox_8cpp-example.htmlp) using gridbox:
+[Example](https://arthursonzogni.github.io/FTXUI/examples_2dom_2gridbox_8cpp-example.html) using gridbox:
 
 ![image](https://user-images.githubusercontent.com/4759106/147242972-0db1f2e9-0790-496f-86e6-ed2c604f7a73.png)
 
@@ -109,6 +109,7 @@ Element can become flexible using the the `flex` decorator.
 
 An element can be decorated using the functions:
   - `bold`
+  - `italic`
   - `dim`
   - `inverted`
   - `underlined`
@@ -199,7 +200,7 @@ Complex [examples](https://github.com/ArthurSonzogni/FTXUI/blob/master/examples/
 
 #### Component
 
-The ftxui/component is needed when you want to produce dynamic UI, reactive to the user's input. It defines a set of ftxui::Component. A component reacts to Events (keyboard, mouse, resize, ...) and Render Element (see previous section).
+ftxui/component produces dynamic UI, reactive to the user's input. It defines a set of ftxui::Component. A component reacts to Events (keyboard, mouse, resize, ...) and Renders as an Element (see previous section).
 
 Prebuilt components are declared in [<ftxui/component/component.hpp>](https://arthursonzogni.github.io/FTXUI/component_8hpp_source.html)
 
@@ -293,7 +294,10 @@ Prebuilt components are declared in [<ftxui/component/component.hpp>](https://ar
 </details>
 
 ## Libraries for FTXUI
-- *Want to share a useful component using FTXUI? Feel free adding yours here*
+- *Want to share a useful Component for FTXUI? Feel free to add yours here*
+- [ftxui-grid-container](https://github.com/mingsheng13/grid-container-ftxui)
+- [ftxui-ip-input](https://github.com/mingsheng13/ip-input-ftxui)
+- [ftxui-image-view](https://github.com/ljrrjl/ftxui-image-view.git): For Image Display.
 
 
 ## Project using FTXUI
@@ -301,12 +305,12 @@ Prebuilt components are declared in [<ftxui/component/component.hpp>](https://ar
 Feel free to add your projects here:
 - [json-tui](https://github.com/ArthurSonzogni/json-tui)
 - [git-tui](https://github.com/ArthurSonzogni/git-tui)
+- [ostree-tui](https://github.com/AP-Sensing/ostree-tui)
 - [rgb-tui](https://github.com/ArthurSonzogni/rgb-tui)
 - [chrome-log-beautifier](https://github.com/ArthurSonzogni/chrome-log-beautifier)
 - [x86-64 CPU Architecture Simulation](https://github.com/AnisBdz/CPU)
 - [ltuiny](https://github.com/adrianoviana87/ltuiny)
 - [i3-termdialogs](https://github.com/mibli/i3-termdialogs)
-- [Just-Fast](https://github.com/GiuseppeCesarano/just-fast)
 - [simpPRU](https://github.com/VedantParanjape/simpPRU)
 - [Pigeon ROS TUI](https://github.com/PigeonSensei/Pigeon_ros_tui)
 - [hastur](https://github.com/robinlinden/hastur)
@@ -322,6 +326,28 @@ Feel free to add your projects here:
 - [StartUp](https://github.com/StubbornVegeta/StartUp)
 - [eCAL monitor](https://github.com/eclipse-ecal/ecal)
 - [Path Finder](https://github.com/Ruebled/Path_Finder)
+- [rw-tui](https://github.com/LeeKyuHyuk/rw-tui)
+- [resource-monitor](https://github.com/catalincd/resource-monitor)
+- [ftxuiFileReader](https://github.com/J0sephDavis/ftxuiFileReader)
+- [ftxui_CPUMeter](https://github.com/tzzzzzzzx/ftxui_CPUMeter)
+- [Captain's log](https://github.com/nikoladucak/caps-log)
+- [FTowerX](https://github.com/MhmRhm/FTowerX)
+- [Caravan](https://github.com/r3w0p/caravan)
+- [Step-Writer](https://github.com/BrianAnakPintar/step-writer)
+- [XJ music](https://github.com/xjmusic/xjmusic)
+- [UDP chat](https://github.com/Sergeydigl3/udp-chat-tui)
+- [2048-cpp](https://github.com/Chessom/2048-cpp)
+- [Memory game](https://github.com/mikolajlubiak/memory)
+- [Terminal Animation](https://github.com/mikolajlubiak/terminal_animation)
+- [pciex](https://github.com/s0nx/pciex)
+- [Fallout terminal hacking](https://github.com/gshigin/yet-another-fallout-terminal-hacking-game)
+- [Lazylist](https://github.com/zhuyongqi9/lazylist)
+- [TUISIC](https://github.com/Dark-Kernel/tuisic)
+- [inLimbo](https://github.com/nots1dd/inLimbo)
+- [BestEdrOfTheMarket](https://github.com/Xacone/BestEdrOfTheMarket)
+- [terminal-rain](https://github.com/Oakamoore/terminal-rain)
+- [keywords](https://github.com/Oakamoore/keywords) ([Play web version :heart:](https://oakamoore.itch.io/keywords))
+- [FTB - tertminal file browser](https://github.com/Cyxuan0311/FTB)
 
 ### [cpp-best-practices/game_jam](https://github.com/cpp-best-practices/game_jam)
 
@@ -338,16 +364,15 @@ Several games using the FTXUI have been made during the Game Jam:
 - [smoothlife](https://github.com/cpp-best-practices/game_jam/blob/main/Jam1_April_2022/smoothlife.md)
 - [Consu](https://github.com/cpp-best-practices/game_jam/blob/main/Jam1_April_2022/consu.md)
 
-## External package
+## Utilization
 
-It is **highly** recommended to use CMake FetchContent to depend on FTXUI. This
-way you can specify which commit you would like to depend on.
+It is **highly** recommended to use CMake FetchContent to depend on FTXUI so you may specify which commit you would like to depend on.
 ```cmake
 include(FetchContent)
 
 FetchContent_Declare(ftxui
   GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
-  GIT_TAG v3.0.0
+  GIT_TAG v6.0.2
 )
 
 FetchContent_GetProperties(ftxui)
@@ -357,13 +382,20 @@ if(NOT ftxui_POPULATED)
 endif()
 ```
 
-If you don't, the following packages have been created:
+If you don't, FTXUI may be used from the following packages:
 - [vcpkg](https://vcpkgx.com/details.html?package=ftxui)
 - [Arch Linux PKGBUILD](https://aur.archlinux.org/packages/ftxui-git/).
 - [conan.io](https://conan.io/center/ftxui)
 - [openSUSE](https://build.opensuse.org/package/show/devel:libraries:c_c++/ftxui)
+- 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/libftxui.svg)](https://repology.org/project/libftxui/versions)
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/ftxui.svg)](https://repology.org/project/ftxui/versions)
+If you choose to build and link FTXUI yourself, `ftxui-component` must be first in the linking order relative to the other FTXUI libraries, i.e.
+```bash
+g++ . . . -lftxui-component -lftxui-dom -lftxui-screen . . .
+```
+
+
 
 ## Contributors
 

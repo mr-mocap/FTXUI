@@ -1,7 +1,9 @@
+// Copyright 2021 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <functional>  // for function
 #include <memory>  // for make_unique, __shared_ptr_access, __shared_ptr_access<>::element_type, shared_ptr
-#include <type_traits>  // for remove_reference, remove_reference<>::type
-#include <utility>      // for move
+#include <utility>  // for move
 
 #include "ftxui/component/component.hpp"  // for ComponentDecorator, Maybe, Make
 #include "ftxui/component/component_base.hpp"  // for Component, ComponentBase
@@ -11,14 +13,19 @@
 
 namespace ftxui {
 
+/// @brief Decorate a component |child|. It is shown only when |show| returns
+/// true.
+/// @param child the compoenent to decorate.
+/// @param show a function returning whether |child| should shown.
+/// @ingroup component
 Component Maybe(Component child, std::function<bool()> show) {
   class Impl : public ComponentBase {
    public:
     explicit Impl(std::function<bool()> show) : show_(std::move(show)) {}
 
    private:
-    Element Render() override {
-      return show_() ? ComponentBase::Render() : std::make_unique<Node>();
+    Element OnRender() override {
+      return show_() ? ComponentBase::OnRender() : std::make_unique<Node>();
     }
     bool Focusable() const override {
       return show_() && ComponentBase::Focusable();
@@ -37,7 +44,7 @@ Component Maybe(Component child, std::function<bool()> show) {
 
 /// @brief Decorate a component. It is shown only when the |show| function
 /// returns true.
-/// @param show a function returning whether the decoratorated component should
+/// @param show a function returning whether the decorated component should
 /// be shown.
 /// @ingroup component
 ///
@@ -83,7 +90,3 @@ ComponentDecorator Maybe(const bool* show) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2021 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

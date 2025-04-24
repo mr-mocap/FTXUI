@@ -1,12 +1,15 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #ifndef FTXUI_DOM_FLEXBOX_HELPER_HPP
 #define FTXUI_DOM_FLEXBOX_HELPER_HPP
 
 #include <vector>
 #include "ftxui/dom/flexbox_config.hpp"
 
-namespace ftxui {
-namespace flexbox_helper {
+namespace ftxui::flexbox_helper {
 
+// A block is a rectangle in the flexbox.
 struct Block {
   // Input:
   int min_size_x = 0;
@@ -17,8 +20,8 @@ struct Block {
   int flex_shrink_y = 0;
 
   // Output:
-  int line;
-  int line_position;
+  int line{};
+  int line_position{};
   int x = 0;
   int y = 0;
   int dim_x = 0;
@@ -26,8 +29,18 @@ struct Block {
   bool overflow = false;
 };
 
+// A line is a row of blocks.
+struct Line {
+  std::vector<Block*> blocks;
+  int x = 0;
+  int y = 0;
+  int dim_x = 0;
+  int dim_y = 0;
+};
+
 struct Global {
   std::vector<Block> blocks;
+  std::vector<Line> lines;
   FlexboxConfig config;
   int size_x;
   int size_y;
@@ -35,11 +48,6 @@ struct Global {
 
 void Compute(Global& global);
 
-}  // namespace flexbox_helper
-}  // namespace ftxui
+}  // namespace ftxui::flexbox_helper
 
 #endif /* end of include guard: FTXUI_DOM_FLEXBOX_HELPER_HPP*/
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

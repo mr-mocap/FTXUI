@@ -1,8 +1,126 @@
 Changelog
 =========
 
-current (development) 
----------------------
+Development
+-----------
+### Component
+- Bugfix: Fix a crash with ResizeableSplit. See #1023.
+  - Clamp screen size to terminal size.
+  - Disallow `ResizeableSplit` with negative size.
+
+### Dom
+- Bugfix: Disallow specifying a negative size constraint. See #1023.
+
+
+6.0.2 (2025-03-30)
+-----
+
+### Component
+- BugFix: Fix major crash on Windows affecting all components. See #1020
+- BugFix: Fix focusRelative.
+
+6.0.1 (2025-03-28)
+-----
+
+Same as v6.0.0.
+
+Due to a problem tag v6.0.0 was replaced. This isn't a good practice and affect
+developers that started using it in the short timeframe. Submitting a new
+release with the same content is the best way to fix this.
+
+See #1017 and #1019.
+
+6.0.0 (2025-03-23)
+-----
+
+### Component
+- Feature: Add support for raw input. Allowing more keys to be detected.
+- Feature: Add `ScreenInteractive::ForceHandleCtrlC(false)` to allow component
+  to fully override the default `Ctrl+C` handler.
+- Feature: Add `ScreenInteractive::ForceHandleCtrlZ(false)` to allow component
+  to fully override the default `Ctrl+Z` handler.
+- Feature: Add `Mouse::WeelLeft` and `Mouse::WeelRight` events on supported
+  terminals.
+- Feature: Add `Event::DebugString()`.
+- Feature: Add support for `Input`'s insert mode. Add `InputOption::insert`
+  option. Added by @mingsheng13.
+- Feature: Add `DropdownOption` to configure the dropdown. See #826.
+- Feature: Add support for Selection. Thanks @clement-roblot. See #926.
+  - See `ScreenInteractive::GetSelection()`.
+  - See `ScreenInteractive::SelectionChange(...)` listener.
+- Bugfix/Breaking change: `Mouse transition`:
+  - Detect when the mouse move, as opposed to being pressed.
+    The Mouse::Moved motion was added.
+  - Dragging the mouse with the left button pressed now avoids activating
+    multiple checkboxes.
+  - A couple of components are now activated when the mouse is pressed,
+  as opposed to being released.
+  This fixes: https://github.com/ArthurSonzogni/FTXUI/issues/773
+  This fixes: https://github.com/ArthurSonzogni/FTXUI/issues/792
+- Bugfix: mouse.control is now reported correctly.
+- Feature: Add `ScreenInteractive::FullscreenPrimaryScreen()`. This allows
+  displaying a fullscreen component on the primary screen, as opposed to the
+  alternate screen.
+- Bugfix: `Input` `onchange` was not called on backspace or delete key.
+  Fixed by @chrysante in chrysante in PR #776.
+- Bugfix: Propertly restore cursor shape on exit. See #792.
+- Bugfix: Fix cursor position in when in the last column. See #831.
+- Bugfix: Fix `ResizeableSplit` keyboard navigation. Fixed by #842.
+- Bugfix: Fix `Menu` focus. See #841
+- Feature: Add `ComponentBase::Index()`. This allows to get the index of a
+  component in its parent. See #932
+- Feature: Add `EntryState::index`. This allows to get the index of a menu entry.
+  See #932
+- Feature: Add `SliderOption::on_change`. This allows to set a callback when the
+  slider value changes. See #938.
+- Bugfix: Handle `Dropdown` with no entries.
+- Bugfix: Fix crash in `LinearGradient` due to float precision and an off-by-one
+          mistake. See #998.
+
+### Dom
+- Feature: Add `italic` decorator. For instance:
+  ```cpp
+  auto italic_text = text("Italic text") | italic;
+  ```
+  ```cpp
+  auto italic_text = italic(text("Italic text"));
+  ```
+  Proposed by @kenReneris in #1009.
+- Feature: Add `hscroll_indicator`. It display an horizontal indicator
+  reflecting the current scroll position. Proposed by @ibrahimnasson in
+  [issue 752](https://github.com/ArthurSonzogni/FTXUI/issues/752)
+- Feature: Add `extend_beyond_screen` option to `Dimension::Fit(..)`, allowing
+  the element to be larger than the screen. Proposed by @LordWhiro. See #572 and
+  #949.
+- Feature: Add support for Selection. Thanks @clement-roblot. See #926.
+  - See `selectionColor` decorator.
+  - See `selectionBackgroundColor` decorator.
+  - See `selectionForegroundColor` decorator.
+  - See `selectionStyle(style)` decorator.
+  - See `selectionStyleReset` decorator.
+- Breaking change: Change how "focus"/"select" are handled. This fixes the
+  behavior.
+- Breaking change: `Component::OnRender()` becomes the method to override to
+  render a component. This replaces `Component::Render()` that is still in use
+  to call the rendering method on the children. This change allows to fix a
+  couple of issues around focus handling.
+
+### Screen
+- Feature: Add `Box::IsEmpty()`.
+- Feature: Color transparency
+    - Add `Color::RGBA(r,g,b,a)`.
+    - Add `Color::HSVA(r,g,b,a)`.
+    - Add `Color::Blend(Color)`.
+    - Add `Color::IsOpaque()`
+
+### Util
+- Feature: Support arbitrary `Adapter` for `ConstStringListRef`. See #843.
+
+### Build
+- Support for cmake's "unity/jumbo" builds. Fixed by @ClausKlein.
+
+5.0.0
+-----
 
 ### Component
 - Breaking: MenuDirection enum is renamed Direction
@@ -10,7 +128,7 @@ current (development)
 - Breaking: Direction enum is renamed WidthOrHeight
 - Breaking: Remove `ComponentBase` copy constructor/assignment.
 - Breaking: MenuOption::entries is renamed MenuOption::entries_option.
-- Breaking: Ref<XxxOption> becomes XxxOption in component constructors.
+- Breaking: `Ref<{Component}Option>` becomes `{Component}Option` in component constructors.
 - Feature: `ResizeableSplit` now support arbitrary element as a separator.
 - Feature: `input` is now supporting multiple lines.
 - Feature: `input` style is now customizeable.
@@ -26,6 +144,7 @@ current (development)
   Component Slider(SliderOption<T> options);
   Component ResizableSplit(ResizableSplitOption options);
   ```
+- Feature: Add `ScreenInteractive::TrackMouse(false)` disable mouse support.
 
 ### Dom
 - Feature: Add `hyperlink` decorator. For instance:
@@ -34,6 +153,12 @@ current (development)
   ```
   See the [OSC 8 page](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda).
   FTXUI support proposed by @aaleino in [#662](https://github.com/ArthurSonzogni/FTXUI/issues/662).
+
+### Screen
+- Breaking: `WordBreakProperty` becomes a uint8_t enum. This yields a 0.8%
+  performance improvement.
+- Breaking: Remove user defined Pixel constructor and equality operator.
+- Performance: 19% faster on benchmarks.
 
 
 ### Build

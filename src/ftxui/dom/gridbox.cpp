@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <algorithm>  // for max, min
 #include <cstddef>    // for size_t
 #include <memory>  // for __shared_ptr_access, shared_ptr, make_shared, allocator_traits<>::value_type
@@ -28,12 +31,11 @@ int Integrate(std::vector<int>& elements) {
   }
   return accu;
 }
-}  // namespace
 
 class GridBox : public Node {
  public:
   explicit GridBox(std::vector<Elements> lines) : lines_(std::move(lines)) {
-    y_size = lines_.size();
+    y_size = static_cast<int>(lines_.size());
     for (const auto& line : lines_) {
       x_size = std::max(x_size, int(line.size()));
     }
@@ -47,13 +49,7 @@ class GridBox : public Node {
   }
 
   void ComputeRequirement() override {
-    requirement_.min_x = 0;
-    requirement_.min_y = 0;
-    requirement_.flex_grow_x = 0;
-    requirement_.flex_grow_y = 0;
-    requirement_.flex_shrink_x = 0;
-    requirement_.flex_shrink_y = 0;
-
+    requirement_ = Requirement{};
     for (auto& line : lines_) {
       for (auto& cell : line) {
         cell->ComputeRequirement();
@@ -73,19 +69,15 @@ class GridBox : public Node {
     requirement_.min_x = Integrate(size_x);
     requirement_.min_y = Integrate(size_y);
 
-    // Forward the selected/focused child state:
-    requirement_.selection = Requirement::NORMAL;
+    // Forward the focused/focused child state:
     for (int x = 0; x < x_size; ++x) {
       for (int y = 0; y < y_size; ++y) {
-        if (requirement_.selection >= lines_[y][x]->requirement().selection) {
+        if (requirement_.focused.enabled ||
+            !lines_[y][x]->requirement().focused.enabled) {
           continue;
         }
-        requirement_.selection = lines_[y][x]->requirement().selection;
-        requirement_.selected_box = lines_[y][x]->requirement().selected_box;
-        requirement_.selected_box.x_min += size_x[x];
-        requirement_.selected_box.x_max += size_x[x];
-        requirement_.selected_box.y_min += size_y[y];
-        requirement_.selected_box.y_max += size_y[y];
+        requirement_.focused = lines_[y][x]->requirement().focused;
+        requirement_.focused.box.Shift(size_x[x], size_y[y]);
       }
     }
   }
@@ -150,7 +142,8 @@ class GridBox : public Node {
   int y_size = 0;
   std::vector<Elements> lines_;
 };
-
+}  // namespace
+   //
 /// @brief A container displaying a grid of elements.
 /// @param lines A list of lines, each line being a list of elements.
 /// @return The container.
@@ -182,7 +175,3 @@ Element gridbox(std::vector<Elements> lines) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

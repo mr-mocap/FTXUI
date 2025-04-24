@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #ifndef FTXUI_COMPONENT_SCREEN_INTERACTIVE_HPP
 #define FTXUI_COMPONENT_SCREEN_INTERACTIVE_HPP
 
@@ -13,6 +16,7 @@
 #include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
 #include "ftxui/component/event.hpp"           // for Event
 #include "ftxui/component/task.hpp"            // for Task, Closure
+#include "ftxui/dom/selection.hpp"             // for SelectionOption
 #include "ftxui/screen/screen.hpp"             // for Screen
 
 namespace ftxui {
@@ -28,8 +32,13 @@ class ScreenInteractive : public Screen {
   // Constructors:
   static ScreenInteractive FixedSize(int dimx, int dimy);
   static ScreenInteractive Fullscreen();
+  static ScreenInteractive FullscreenPrimaryScreen();
+  static ScreenInteractive FullscreenAlternateScreen();
   static ScreenInteractive FitComponent();
   static ScreenInteractive TerminalOutput();
+
+  // Options. Must be called before Loop().
+  void TrackMouse(bool enable = true);
 
   // Return the currently active screen, nullptr if none.
   static ScreenInteractive* Active();
@@ -51,6 +60,19 @@ class ScreenInteractive : public Screen {
   // temporarily uninstalled.
   Closure WithRestoredIO(Closure);
 
+  // FTXUI implements handlers for Ctrl-C and Ctrl-Z. By default, these handlers
+  // are executed, even if the component catches the event. This avoid users
+  // handling every event to be trapped in the application. However, in some
+  // cases, the application may want to handle these events itself. In this
+  // case, the application can force FTXUI to not handle these events by calling
+  // the following functions with force=true.
+  void ForceHandleCtrlC(bool force);
+  void ForceHandleCtrlZ(bool force);
+
+  // Selection API.
+  std::string GetSelection();
+  void SelectionChange(std::function<void()> callback);
+
  private:
   void ExitNow();
 
@@ -65,6 +87,8 @@ class ScreenInteractive : public Screen {
   void RunOnceBlocking(Component component);
 
   void HandleTask(Component component, Task& task);
+  bool HandleSelection(bool handled, Event event);
+  void RefreshSelection();
   void Draw(Component component);
   void ResetCursorPosition();
 
@@ -84,13 +108,15 @@ class ScreenInteractive : public Screen {
                     Dimension dimension,
                     bool use_alternative_screen);
 
+  bool track_mouse_ = true;
+
   Sender<Task> task_sender_;
   Receiver<Task> task_receiver_;
 
   std::string set_cursor_position;
   std::string reset_cursor_position;
 
-  std::atomic<bool> quit_ = false;
+  std::atomic<bool> quit_{false};
   std::thread event_listener_;
   std::thread animation_listener_;
   bool animation_requested_ = false;
@@ -103,6 +129,28 @@ class ScreenInteractive : public Screen {
   bool previous_frame_resized_ = false;
 
   bool frame_valid_ = false;
+
+  bool force_handle_ctrl_c_ = true;
+  bool force_handle_ctrl_z_ = true;
+
+  // The style of the cursor to restore on exit.
+  int cursor_reset_shape_ = 1;
+
+  // Selection API:
+  CapturedMouse selection_pending_;
+  struct SelectionData {
+    int start_x = -1;
+    int start_y = -1;
+    int end_x = -2;
+    int end_y = -2;
+    bool empty = true;
+    bool operator==(const SelectionData& other) const;
+    bool operator!=(const SelectionData& other) const;
+  };
+  SelectionData selection_data_;
+  SelectionData selection_data_previous_;
+  std::unique_ptr<Selection> selection_;
+  std::function<void()> selection_on_change_;
 
   friend class Loop;
 
@@ -117,7 +165,3 @@ class ScreenInteractive : public Screen {
 }  // namespace ftxui
 
 #endif /* end of include guard: FTXUI_COMPONENT_SCREEN_INTERACTIVE_HPP */
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

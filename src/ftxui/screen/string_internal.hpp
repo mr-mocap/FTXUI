@@ -1,7 +1,12 @@
+// Copyright 2023 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #ifndef FTXUI_SCREEN_STRING_INTERNAL_HPP
 #define FTXUI_SCREEN_STRING_INTERNAL_HPP
 
 #include <cstdint>
+#include <string>
+#include <vector>
 
 namespace ftxui {
 
@@ -32,7 +37,7 @@ int GlyphCount(const std::string& input);
 
 // Properties from:
 // https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/WordBreakProperty.txt
-enum class WordBreakProperty {
+enum class WordBreakProperty : int8_t {
   ALetter,
   CR,
   Double_Quote,
@@ -60,7 +65,3 @@ bool IsWordBreakingCharacter(const std::string& input, size_t glyph_index);
 }  // namespace ftxui
 
 #endif /* end of include guard: FTXUI_SCREEN_STRING_INTERNAL_HPP */
-
-// Copyright 2023 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

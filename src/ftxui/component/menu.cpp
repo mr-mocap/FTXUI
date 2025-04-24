@@ -1,14 +1,15 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <algorithm>                // for max, fill_n, reverse
 #include <chrono>                   // for milliseconds
 #include <ftxui/dom/direction.hpp>  // for Direction, Direction::Down, Direction::Left, Direction::Right, Direction::Up
 #include <functional>               // for function
-#include <memory>                   // for allocator_traits<>::value_type, swap
 #include <string>                   // for operator+, string
 #include <utility>                  // for move
 #include <vector>                   // for vector, __alloc_traits<>::value_type
 
-#include "ftxui/component/animation.hpp"       // for Animator, Linear
-#include "ftxui/component/captured_mouse.hpp"  // for CapturedMouse
+#include "ftxui/component/animation.hpp"  // for Animator, Linear
 #include "ftxui/component/component.hpp"  // for Make, Menu, MenuEntry, Toggle
 #include "ftxui/component/component_base.hpp"     // for ComponentBase
 #include "ftxui/component/component_options.hpp"  // for MenuOption, MenuEntryOption, UnderlineOption, AnimatedColorOption, AnimatedColorsOption, EntryState
@@ -67,7 +68,7 @@ bool IsHorizontal(Direction direction) {
 /// @ingroup component
 class MenuBase : public ComponentBase, public MenuOption {
  public:
-  explicit MenuBase(MenuOption option) : MenuOption(std::move(option)) {}
+  explicit MenuBase(const MenuOption& option) : MenuOption(option) {}
 
   bool IsHorizontal() { return ftxui::IsHorizontal(direction); }
   void OnChange() {
@@ -104,7 +105,7 @@ class MenuBase : public ComponentBase, public MenuOption {
     }
   }
 
-  Element Render() override {
+  Element OnRender() override {
     Clamp();
     UpdateAnimationTarget();
 
@@ -122,21 +123,18 @@ class MenuBase : public ComponentBase, public MenuOption {
       const bool is_selected = (selected() == i);
 
       const EntryState state = {
-          entries[i],
-          false,
-          is_selected,
-          is_focused,
+          entries[i], false, is_selected, is_focused, i,
       };
 
-      auto focus_management =
-          is_menu_focused && (selected_focus_ == i) ? focus : nothing;
-
-      const Element element =
-          (entries_option.transform ? entries_option.transform
-                                    : DefaultOptionTransform)  //
+      Element element = (entries_option.transform ? entries_option.transform
+                                                  : DefaultOptionTransform)  //
           (state);
-      elements.push_back(element | AnimatedColorStyle(i) | reflect(boxes_[i]) |
-                         focus_management);
+      if (selected_focus_ == i) {
+        element |= focus;
+      }
+      element |= AnimatedColorStyle(i);
+      element |= reflect(boxes_[i]);
+      elements.push_back(element);
     }
     if (elements_postfix) {
       elements.push_back(elements_postfix());
@@ -146,8 +144,9 @@ class MenuBase : public ComponentBase, public MenuOption {
       std::reverse(elements.begin(), elements.end());
     }
 
-    const Element bar =
-        IsHorizontal() ? hbox(std::move(elements)) : vbox(std::move(elements));
+    const Element bar = IsHorizontal()
+                            ? hbox(std::move(elements), selected_focus_)
+                            : vbox(std::move(elements), selected_focus_);
 
     if (!underline.enabled) {
       return bar | reflect(box_);
@@ -315,8 +314,9 @@ class MenuBase : public ComponentBase, public MenuOption {
 
       TakeFocus();
       focused_entry() = i;
+
       if (event.mouse().button == Mouse::Left &&
-          event.mouse().motion == Mouse::Released) {
+          event.mouse().motion == Mouse::Pressed) {
         if (selected() != i) {
           selected() = i;
           selected_previous_ = selected();
@@ -508,6 +508,7 @@ class MenuBase : public ComponentBase, public MenuOption {
 ///   entry 2
 ///   entry 3
 /// ```
+// NOLINTNEXTLINE
 Component Menu(MenuOption option) {
   return Make<MenuBase>(std::move(option));
 }
@@ -540,9 +541,9 @@ Component Menu(MenuOption option) {
 ///   entry 3
 /// ```
 Component Menu(ConstStringListRef entries, int* selected, MenuOption option) {
-  option.entries = entries;
+  option.entries = std::move(entries);
   option.selected = selected;
-  return Menu(std::move(option));
+  return Menu(option);
 }
 
 /// @brief An horizontal list of elements. The user can navigate through them.
@@ -551,7 +552,7 @@ Component Menu(ConstStringListRef entries, int* selected, MenuOption option) {
 /// See also |Menu|.
 /// @ingroup component
 Component Toggle(ConstStringListRef entries, int* selected) {
-  return Menu(entries, selected, MenuOption::Toggle());
+  return Menu(std::move(entries), selected, MenuOption::Toggle());
 }
 
 /// @brief A specific menu entry. They can be put into a Container::Vertical to
@@ -617,23 +618,22 @@ Component MenuEntry(MenuEntryOption option) {
         : MenuEntryOption(std::move(option)) {}
 
    private:
-    Element Render() override {
-      const bool focused = Focused();
+    Element OnRender() override {
+      const bool is_focused = Focused();
       UpdateAnimationTarget();
 
-      const EntryState state = {
-          label(),
-          false,
-          hovered_,
-          focused,
+      const EntryState state{
+          label(), false, hovered_, is_focused, Index(),
       };
 
-      const Element element =
-          (transform ? transform : DefaultOptionTransform)  //
+      Element element = (transform ? transform : DefaultOptionTransform)  //
           (state);
 
-      auto focus_management = focused ? select : nothing;
-      return element | AnimatedColorStyle() | focus_management | reflect(box_);
+      if (is_focused) {
+        element |= focus;
+      }
+
+      return element | AnimatedColorStyle() | reflect(box_);
     }
 
     void UpdateAnimationTarget() {
@@ -681,7 +681,7 @@ Component MenuEntry(MenuEntryOption option) {
       }
 
       if (event.mouse().button == Mouse::Left &&
-          event.mouse().motion == Mouse::Released) {
+          event.mouse().motion == Mouse::Pressed) {
         TakeFocus();
         return true;
       }
@@ -694,7 +694,6 @@ Component MenuEntry(MenuEntryOption option) {
       animator_foreground_.OnAnimation(params);
     }
 
-    MenuEntryOption option_;
     Box box_;
     bool hovered_ = false;
 
@@ -710,7 +709,3 @@ Component MenuEntry(MenuEntryOption option) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

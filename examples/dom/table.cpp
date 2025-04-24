@@ -1,3 +1,6 @@
+// Copyright 2020 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <ftxui/dom/elements.hpp>  // for color, Fit, LIGHT, align_right, bold, DOUBLE
 #include <ftxui/dom/table.hpp>      // for Table, TableSelection
 #include <ftxui/screen/screen.hpp>  // for Screen
@@ -52,14 +55,11 @@ int main() {
   content.DecorateCellsAlternateRow(color(Color::White), 3, 2);
 
   auto document = table.Render();
-  auto screen = Screen::Create(Dimension::Fit(document));
+  auto screen =
+      Screen::Create(Dimension::Fit(document, /*extend_beyond_screen=*/true));
   Render(screen, document);
   screen.Print();
   std::cout << std::endl;
 
   return 0;
 }
-
-// Copyright 2020 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.

@@ -1,3 +1,6 @@
+// Copyright 2023 Arthur Sonzogni. All rights reserved.
+// Use of this source code is governed by the MIT license that can be found in
+// the LICENSE file.
 #include <cstdint>  // for uint8_t
 #include <memory>   // for make_shared
 #include <string>   // for string
@@ -10,6 +13,7 @@
 
 namespace ftxui {
 
+namespace {
 class Hyperlink : public NodeDecorator {
  public:
   Hyperlink(Element child, std::string link)
@@ -27,6 +31,7 @@ class Hyperlink : public NodeDecorator {
 
   std::string link_;
 };
+}  // namespace
 
 /// @brief Make the rendered area clickable using a web browser.
 ///        The link will be opened when the user click on it.
@@ -67,7 +72,3 @@ Decorator hyperlink(std::string link) {
 }
 
 }  // namespace ftxui
-
-// Copyright 2023 Arthur Sonzogni. All rights reserved.
-// Use of this source code is governed by the MIT license that can be found in
-// the LICENSE file.
